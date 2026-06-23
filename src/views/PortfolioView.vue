@@ -40,7 +40,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { usePortfolioStore } from '@/stores/portfolioStore'
 import { useTheme } from '@/composables/useTheme'
 import { useScrollReveal } from '@/composables/useScrollReveal'
@@ -63,7 +63,14 @@ import FooterComponent from '@/components/FooterComponent.vue'
 const store = usePortfolioStore()
 const { theme, toggle: toggleTheme } = useTheme()
 
-useScrollReveal()
+const { initObserver } = useScrollReveal()
+
+// Réinitialiser l'observer quand les données sont chargées
+watch(() => store.loading, (loading) => {
+  if (!loading) {
+    nextTick(() => setTimeout(initObserver, 100))
+  }
+})
 
 const commandOpen = ref(false)
 const scrollY = ref(0)

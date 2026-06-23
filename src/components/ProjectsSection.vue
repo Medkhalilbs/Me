@@ -100,10 +100,10 @@ const searchQuery = ref('')
 
 const filters = [
   { label: 'All',        value: 'all' },
-  { label: 'Enterprise', value: 'enterprise' },
+  { label: 'Mobile',     value: 'mobile' },
   { label: 'Web',        value: 'web' },
-  { label: 'Data',       value: 'data' },
-  { label: 'AI',         value: 'ai' },
+  { label: 'Security',   value: 'security' },
+  { label: 'Automation', value: 'automation' },
 ]
 
 const visibleProjects = computed(() => {

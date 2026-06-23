@@ -77,10 +77,11 @@
             <div class="form-group">
               <label class="form-label">Category</label>
               <select v-model="form.category" class="form-input select-input">
-                <option value="enterprise">🏢 Enterprise System</option>
-                <option value="web">🌐 Web Application</option>
-                <option value="mobile">📱 Mobile App</option>
-                <option value="open-source">📦 Open Source / Tool</option>
+                <option value="mobile">Mobile</option>
+                <option value="web">Web</option>
+                <option value="security">Security</option>
+                <option value="automation">Automation</option>
+                <option value="enterprise">Enterprise</option>
               </select>
             </div>
           </div>
