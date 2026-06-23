@@ -1,5 +1,6 @@
 <template>
   <section id="contact" class="section">
+    <div class="section-number">09</div>
     <div class="container">
       <div class="section-badge reveal">📬 Contact</div>
       <h2 class="section-title reveal">Let's Work Together</h2>

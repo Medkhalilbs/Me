@@ -23,7 +23,7 @@
       </div>
 
       <div class="footer-copy">
-        © {{ new Date().getFullYear() }} Mohamed Khalil Ben Sedrine. Built with Vue 3 + Express.
+        © {{ new Date().getFullYear() }} Mohamed Khalil Ben Sedrine
       </div>
     </div>
   </footer>

@@ -15,8 +15,15 @@ export function useParticles(canvasId: string) {
 
   function resize() {
     if (!canvas) return
-    canvas.width = canvas.offsetWidth
-    canvas.height = canvas.offsetHeight
+    // BUG FIX: use parentElement dimensions so canvas fills its container correctly
+    const parent = canvas.parentElement
+    if (parent) {
+      canvas.width = parent.offsetWidth
+      canvas.height = parent.offsetHeight
+    } else {
+      canvas.width = canvas.offsetWidth
+      canvas.height = canvas.offsetHeight
+    }
   }
 
   function spawn(): Particle {
@@ -50,7 +57,7 @@ export function useParticles(canvasId: string) {
       const fade = p.life < 30 ? p.life / 30 : p.life > p.maxLife - 30 ? (p.maxLife - p.life) / 30 : 1
       ctx.beginPath()
       ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2)
-      ctx.fillStyle = `rgba(99, 102, 241, ${p.opacity * fade})`
+      ctx.fillStyle = `rgba(59, 130, 246, ${p.opacity * fade})`
       ctx.fill()
 
       if (p.life >= p.maxLife) particles.splice(i, 1)
@@ -66,7 +73,7 @@ export function useParticles(canvasId: string) {
           ctx.beginPath()
           ctx.moveTo(particles[i].x, particles[i].y)
           ctx.lineTo(particles[j].x, particles[j].y)
-          ctx.strokeStyle = `rgba(99, 102, 241, ${0.15 * (1 - dist / 120)})`
+          ctx.strokeStyle = `rgba(59, 130, 246, ${0.15 * (1 - dist / 120)})`
           ctx.lineWidth = 0.5
           ctx.stroke()
         }
@@ -82,6 +89,12 @@ export function useParticles(canvasId: string) {
     ctx = canvas.getContext('2d')
     resize()
     window.addEventListener('resize', resize)
+    // BUG FIX: re-resize after full layout paint to get correct parent dimensions
+    setTimeout(() => {
+      resize()
+      // Refill particles for new dimensions
+      particles.length = 0
+    }, 200)
     draw()
   })
 

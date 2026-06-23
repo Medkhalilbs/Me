@@ -1,5 +1,6 @@
 <template>
   <section id="testimonials" class="section">
+    <div class="section-number">07</div>
     <div class="container">
       <div class="section-badge reveal">💬 Testimonials</div>
       <h2 class="section-title reveal">What Colleagues Say</h2>

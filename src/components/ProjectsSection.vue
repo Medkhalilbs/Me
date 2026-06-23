@@ -1,5 +1,6 @@
 <template>
   <section id="projects" class="section" style="background: var(--bg-secondary);">
+    <div class="section-number">04</div>
     <div class="container">
       <div class="section-badge reveal">🚀 Projects</div>
       <h2 class="section-title reveal">Featured Work</h2>
@@ -29,6 +30,7 @@
         <div
           v-for="(project, i) in visibleProjects"
           :key="project.id"
+          :ref="el => applyTiltEffect(el as HTMLElement)"
           class="card project-card"
           :style="{ animationDelay: `${i * 0.08}s` }"
         >
@@ -91,12 +93,16 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import { useTiltCard } from '@/composables/useTiltCard'
 import type { Project } from '@/types'
 
-const props = defineProps<{ projects: Project[] }>()
+const props = defineProps<{
+  projects: Project[]
+}>()
 
 const activeFilter = ref('all')
 const searchQuery = ref('')
+const { applyTiltEffect } = useTiltCard()
 
 const filters = [
   { label: 'All',        value: 'all' },
@@ -148,7 +154,7 @@ const visibleProjects = computed(() => {
 .filter-btn:hover {
   background: var(--accent);
   border-color: var(--accent);
-  color: #fff;
+  color: var(--bg-primary);
 }
 
 .project-search {
@@ -175,7 +181,11 @@ const visibleProjects = computed(() => {
   gap: 1.5rem;
 }
 
-.project-card { padding: 1.75rem; }
+.project-card {
+  padding: 1.75rem;
+  transform-style: preserve-3d;
+  will-change: transform;
+}
 
 .project-category-badge {
   display: inline-block;
@@ -229,6 +239,37 @@ const visibleProjects = computed(() => {
 
 .project-tech { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-bottom: 1rem; }
 .project-links { display: flex; gap: 0.5rem; }
+
+/* Alternating Alignment rhythm for project cards */
+@media (min-width: 768px) {
+  .project-card:nth-child(even) {
+    text-align: right;
+  }
+  
+  .project-card:nth-child(even) .project-tech,
+  .project-card:nth-child(even) .project-links {
+    justify-content: flex-end;
+  }
+  
+  .project-card:nth-child(even) .project-features li {
+    padding-left: 0;
+    padding-right: 1.2rem;
+  }
+  
+  .project-card:nth-child(even) .project-features li::before {
+    left: auto;
+    right: 0;
+  }
+  
+  .project-card:nth-child(even) .detail-item {
+    flex-direction: row-reverse;
+    text-align: right;
+  }
+  
+  .project-card:nth-child(even) .project-impact {
+    flex-direction: row-reverse;
+  }
+}
 
 .no-results {
   text-align: center;

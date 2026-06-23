@@ -1,5 +1,6 @@
 <template>
   <section id="certifications" class="section" style="background: var(--bg-secondary);">
+    <div class="section-number">06</div>
     <div class="container">
       <div class="section-badge reveal">🎓 Certifications</div>
       <h2 class="section-title reveal">Credentials & Achievements</h2>

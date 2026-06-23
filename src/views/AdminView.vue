@@ -120,7 +120,14 @@ const activeComponent = computed(() => panelMap[activePanel.value] || AdminProfi
 </script>
 
 <style scoped>
-.admin-wrapper { min-height: 100vh; }
+.admin-wrapper { min-height: 100vh; position: relative; z-index: 10; }
+
+/* Ensure pointer-events are always active in admin to prevent click blockages */
+.admin-sidebar,
+.admin-content,
+.admin-login-page {
+  pointer-events: auto !important;
+}
 
 /* Login Page */
 .admin-login-page {
@@ -128,7 +135,7 @@ const activeComponent = computed(() => panelMap[activePanel.value] || AdminProfi
   display: flex;
   align-items: center;
   justify-content: center;
-  background: radial-gradient(ellipse at top left, rgba(99, 102, 241, 0.08) 0%, transparent 60%);
+  background: radial-gradient(ellipse at top left, rgba(59, 130, 246, 0.08) 0%, transparent 60%);
 }
 
 .login-card {

@@ -1,5 +1,6 @@
 <template>
   <section id="tech-stack" class="section">
+    <div class="section-number">05</div>
     <div class="container">
       <div class="section-badge reveal">🛠 Tech Stack</div>
       <h2 class="section-title reveal">Technologies I Use</h2>

@@ -15,6 +15,11 @@
         {{ profile?.hero_heading }}
       </h1>
 
+      <!-- Tunisian Signature Tagline -->
+      <p class="signature-tagline reveal">
+        Engineered with precision in Tunisia
+      </p>
+
       <!-- Subtitle -->
       <p class="hero-subtitle reveal">
         {{ profile?.hero_subtitle }}
@@ -24,6 +29,7 @@
       <div class="hero-ctas reveal">
         <a
           v-if="defaultCv"
+          ref="cta1"
           :href="`/api/cvs/download/${defaultCv.id}`"
           class="btn btn-primary"
           download
@@ -34,7 +40,7 @@
           </svg>
           Download CV
         </a>
-        <a href="#contact" class="btn btn-outline">
+        <a ref="cta2" href="#contact" class="btn btn-outline">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
             <polyline points="22,6 12,13 2,6"/>
@@ -62,6 +68,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useParticles } from '@/composables/useParticles'
 import { useMouseGlow } from '@/composables/useMouseGlow'
+import { useMagneticButton } from '@/composables/useMagneticButton'
 import type { Profile, HeroStat, CV } from '@/types'
 
 const props = defineProps<{
@@ -73,24 +80,48 @@ const props = defineProps<{
 const defaultCv = computed(() => props.cvs.find(c => c.is_default) || props.cvs[0] || null)
 const countUpValues = ref<Record<number, string>>({})
 
+const cta1 = ref<HTMLElement | null>(null)
+const cta2 = ref<HTMLElement | null>(null)
+
+const { applyMagneticEffect } = useMagneticButton()
+
 useParticles('particles-canvas')
 useMouseGlow()
 
 onMounted(() => {
-  // Animate count-up for non-static stats
+  // Apply magnetic effect
+  applyMagneticEffect(cta1.value)
+  applyMagneticEffect(cta2.value)
+
+  // BUG FIX: dispatch resize so canvas picks up correct parent dimensions after flex layout settles
+  setTimeout(() => window.dispatchEvent(new Event('resize')), 200)
+
+  // Animate count-up with slot-machine spin ticking for non-static stats
   props.heroStats.forEach(stat => {
     if (stat.is_static) return
     const target = parseInt(stat.value)
     if (isNaN(target)) return
 
-    const duration = 2000
+    const duration = 2200
     const start = performance.now()
+    
     const update = (now: number) => {
       const elapsed = now - start
       const progress = Math.min(elapsed / duration, 1)
-      const eased = 1 - Math.pow(1 - progress, 3)
-      countUpValues.value[stat.id] = Math.round(eased * target) + stat.suffix
-      if (progress < 1) requestAnimationFrame(update)
+
+      if (progress < 0.88) {
+        // Fast slot-machine cycling digits
+        countUpValues.value[stat.id] = Math.floor(Math.random() * (target * 1.2)).toString()
+      } else {
+        // Ease and settle on target
+        countUpValues.value[stat.id] = target.toString()
+      }
+
+      if (progress < 1) {
+        requestAnimationFrame(update)
+      } else {
+        countUpValues.value[stat.id] = target.toString()
+      }
     }
     requestAnimationFrame(update)
   })
@@ -103,23 +134,26 @@ onMounted(() => {
   min-height: 100vh;
   display: flex;
   align-items: center;
+  justify-content: center;
   overflow: hidden;
-  background: radial-gradient(ellipse at top left, rgba(99, 102, 241, 0.08) 0%, transparent 60%),
-              radial-gradient(ellipse at bottom right, rgba(139, 92, 246, 0.06) 0%, transparent 60%);
+  background: radial-gradient(ellipse at top left, rgba(59, 130, 246, 0.08) 0%, transparent 60%),
+              radial-gradient(ellipse at bottom right, rgba(30, 64, 175, 0.06) 0%, transparent 60%);
 }
 
 .hero-content {
   position: relative;
   z-index: 1;
+  width: 100%; /* BUG FIX: flex child must have width:100% to fill container */
   padding-top: 8rem;
   padding-bottom: 4rem;
+  text-align: center;
 }
 
 .badge-dot {
   width: 8px; height: 8px;
   border-radius: 50%;
-  background: var(--success);
-  box-shadow: 0 0 8px var(--success);
+  background: var(--accent);
+  box-shadow: 0 0 8px var(--accent);
   animation: pulse 2s infinite;
 }
 
@@ -131,16 +165,27 @@ onMounted(() => {
 .hero-heading {
   font-size: clamp(2.5rem, 5vw, 4rem);
   max-width: 900px;
-  margin: 0 0 1.5rem;
+  margin: 0 auto 0.5rem;
   line-height: 1.1;
   animation-delay: 0.1s;
+}
+
+.signature-tagline {
+  font-family: var(--font-mono);
+  color: var(--accent);
+  font-style: italic;
+  font-size: 0.95rem;
+  margin-top: 0;
+  margin-bottom: 2rem;
+  letter-spacing: 0.05em;
+  opacity: 0.85;
 }
 
 .hero-subtitle {
   font-size: clamp(1rem, 2vw, 1.25rem);
   color: var(--text-secondary);
   max-width: 650px;
-  margin: 0 0 2.5rem;
+  margin: 0 auto 2.5rem;
   animation-delay: 0.2s;
 }
 
@@ -150,6 +195,7 @@ onMounted(() => {
   gap: 1rem;
   margin-bottom: 4rem;
   animation-delay: 0.3s;
+  justify-content: center;
 }
 
 .hero-stats {
@@ -157,6 +203,7 @@ onMounted(() => {
   flex-wrap: wrap;
   gap: 3rem;
   animation-delay: 0.4s;
+  justify-content: center;
 }
 
 .hero-stat {

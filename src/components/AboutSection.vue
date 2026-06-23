@@ -1,5 +1,6 @@
 <template>
   <section id="about" class="section">
+    <div class="section-number">01</div>
     <div class="container">
       <div class="section-badge reveal">👤 About Me</div>
       <h2 class="section-title reveal">The Mind Behind the Code</h2>
@@ -79,7 +80,7 @@ defineProps<{
   gap: 1.25rem;
   align-items: flex-start;
   background: var(--accent-glow);
-  border: 1px solid rgba(99, 102, 241, 0.2);
+  border: 1px solid rgba(59, 130, 246, 0.2);
   border-radius: var(--radius);
   padding: 1.5rem;
   margin-top: 2rem;

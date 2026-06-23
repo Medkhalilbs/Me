@@ -9,17 +9,26 @@
     <CommandPalette :open="commandOpen" @close="commandOpen = false" />
 
     <main v-if="!store.loading">
-      <HeroSection     :profile="store.profile" :hero-stats="store.heroStats" :cvs="store.cvs" />
-      <AboutSection    :profile="store.profile" :education="store.education" />
-      <SkillsSection   :skills="store.skills" />
-      <ExperienceSection :experiences="store.experiences" />
-      <ProjectsSection :projects="store.projects" />
-      <TechStackSection :tech-stack="store.techStack" />
+      <HeroSection        :profile="store.profile" :hero-stats="store.heroStats" :cvs="store.cvs" />
+      <SectionDivider />
+      <AboutSection       :profile="store.profile" :education="store.education" />
+      <SectionDivider />
+      <SkillsSection      :skills="store.skills" />
+      <SectionDivider />
+      <ExperienceSection  :experiences="store.experiences" />
+      <SectionDivider />
+      <ProjectsSection    :projects="store.projects" />
+      <SectionDivider />
+      <TechStackSection   :tech-stack="store.techStack" />
+      <SectionDivider />
       <CertificationsSection :certifications="store.certifications" />
+      <SectionDivider />
       <TestimonialsSection   :testimonials="store.testimonials" />
-      <WhyWorkWithMe   :why-cards="store.whyCards" />
-      <ContactSection  :profile="store.profile" />
-      <FooterComponent :profile="store.profile" />
+      <SectionDivider />
+      <WhyWorkWithMe      :why-cards="store.whyCards" />
+      <SectionDivider />
+      <ContactSection     :profile="store.profile" />
+      <FooterComponent    :profile="store.profile" />
     </main>
 
     <!-- Loading state -->
@@ -59,6 +68,7 @@ import TestimonialsSection from '@/components/TestimonialsSection.vue'
 import WhyWorkWithMe from '@/components/WhyWorkWithMe.vue'
 import ContactSection from '@/components/ContactSection.vue'
 import FooterComponent from '@/components/FooterComponent.vue'
+import SectionDivider from '@/components/SectionDivider.vue'
 
 const store = usePortfolioStore()
 const { theme, toggle: toggleTheme } = useTheme()
@@ -135,18 +145,19 @@ onUnmounted(() => {
   right: 2rem;
   width: 44px; height: 44px;
   background: var(--accent);
-  color: #fff;
+  color: #0B0D10;
   border: none;
   border-radius: 50%;
   font-size: 1.1rem;
   cursor: pointer;
   display: flex; align-items: center; justify-content: center;
-  box-shadow: 0 4px 20px rgba(99, 102, 241, 0.5);
+  box-shadow: 0 4px 20px rgba(59, 130, 246, 0.5);
   transition: all var(--transition);
   z-index: 999;
+  font-weight: 700;
 }
 
-.back-to-top:hover { transform: translateY(-3px); box-shadow: 0 8px 30px rgba(99, 102, 241, 0.7); }
+.back-to-top:hover { transform: translateY(-3px); box-shadow: 0 8px 30px rgba(59, 130, 246, 0.7); }
 
 .fade-enter-active, .fade-leave-active { transition: opacity 0.3s; }
 .fade-enter-from, .fade-leave-to { opacity: 0; }

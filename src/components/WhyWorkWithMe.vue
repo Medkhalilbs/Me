@@ -1,5 +1,6 @@
 <template>
   <section id="why-me" class="section" style="background: var(--bg-secondary);">
+    <div class="section-number">08</div>
     <div class="container">
       <div class="section-badge reveal">✨ Why Work With Me</div>
       <h2 class="section-title reveal">What Sets Me Apart</h2>

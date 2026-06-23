@@ -232,7 +232,7 @@ async function deleteTestimonial(id: number) {
   justify-content: center;
   font-weight: 700;
   font-size: 0.88rem;
-  border: 1px solid rgba(99, 102, 241, 0.2);
+  border: 1px solid rgba(59, 130, 246, 0.2);
 }
 
 .t-name {

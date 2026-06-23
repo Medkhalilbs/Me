@@ -2,8 +2,14 @@
   <nav class="navbar" :class="{ scrolled: isScrolled }">
     <div class="container" style="display: flex; align-items: center; justify-content: space-between;">
       <!-- Logo -->
-      <a href="#hero" class="gradient-text" style="font-family: 'Space Grotesk', sans-serif; font-size: 1.5rem; font-weight: 800; text-decoration: none;">
-        MKBS
+      <a href="#hero" class="logo-wrap" style="display: flex; align-items: center; gap: 0.6rem; text-decoration: none;">
+        <svg width="34" height="34" viewBox="0 0 100 100" class="logo-svg">
+          <rect width="100" height="100" rx="22" fill="var(--bg-secondary)" stroke="var(--border)" stroke-width="3" class="logo-bg" />
+          <path d="M 25 70 L 25 30 L 50 55 L 75 30 L 75 70" fill="none" stroke="var(--accent)" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" class="logo-path" />
+        </svg>
+        <span class="logo-title gradient-text" style="font-family: 'Space Grotesk', sans-serif; font-size: 1.35rem; font-weight: 800; tracking-wide: true;">
+          MKBS
+        </span>
       </a>
 
       <!-- Desktop Nav Links -->
@@ -16,7 +22,7 @@
       <!-- Actions -->
       <div style="display: flex; align-items: center; gap: 0.75rem;">
         <button class="btn btn-outline" style="padding: 0.5rem 1rem; font-size: 0.85rem;" @click="$emit('open-command')">
-          <span style="font-family: monospace; opacity: 0.7;">⌘K</span>
+          <span style="font-family: var(--font-mono); opacity: 0.7;">⌘K</span>
         </button>
         <button class="theme-toggle" @click="$emit('toggle-theme')">
           <span v-if="theme === 'dark'">☀️</span>
@@ -72,19 +78,51 @@ onUnmounted(() => window.removeEventListener('scroll', onScroll))
   display: flex;
   list-style: none;
   margin: 0; padding: 0;
-  gap: 0.25rem;
+  gap: 0.5rem;
+}
+
+.logo-wrap:hover .logo-path {
+  stroke-dasharray: 200;
+  stroke-dashoffset: 200;
+  animation: drawLogo 0.8s ease-in-out forwards;
+}
+
+@keyframes drawLogo {
+  to {
+    stroke-dashoffset: 0;
+  }
 }
 
 .nav-link {
   color: var(--text-secondary);
   text-decoration: none;
-  font-size: 0.9rem;
-  font-weight: 500;
+  font-size: 0.88rem;
+  font-weight: 600;
   padding: 0.4rem 0.75rem;
-  border-radius: 8px;
-  transition: all var(--transition);
+  position: relative;
+  transition: color var(--transition);
 }
-.nav-link:hover { color: var(--accent); background: var(--accent-glow); }
+.nav-link::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0.75rem;
+  right: 0.75rem;
+  height: 2px;
+  background-color: var(--accent);
+  transform: scaleX(0);
+  transform-origin: right;
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.nav-link:hover {
+  color: var(--text-primary);
+}
+
+.nav-link:hover::after {
+  transform: scaleX(1);
+  transform-origin: left;
+}
 
 .theme-toggle {
   background: var(--bg-card);

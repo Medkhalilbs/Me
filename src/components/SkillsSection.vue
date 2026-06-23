@@ -1,5 +1,6 @@
 <template>
   <section id="skills" class="section" style="background: var(--bg-secondary);">
+    <div class="section-number">02</div>
     <div class="container">
       <div class="section-badge reveal">⚡ Skills</div>
       <h2 class="section-title reveal">Technical Expertise</h2>
@@ -88,6 +89,13 @@ onUnmounted(() => observer?.disconnect())
   gap: 1.5rem;
 }
 
+/* Asymmetric grid layout on larger screens */
+@media (min-width: 992px) {
+  .skill-card:nth-child(3n + 1) {
+    grid-column: span 2;
+  }
+}
+
 .skill-card-header {
   display: flex;
   align-items: center;
@@ -97,17 +105,18 @@ onUnmounted(() => observer?.disconnect())
 .skill-icon {
   width: 44px; height: 44px;
   background: var(--accent-glow);
-  border: 1px solid rgba(99, 102, 241, 0.2);
+  border: 1px solid rgba(59, 130, 246, 0.2);
   border-radius: 10px;
   display: flex; align-items: center; justify-content: center;
   color: var(--accent);
   flex-shrink: 0;
+  font-size: 1.2rem;
 }
 
 .skill-meta { flex: 1; }
 
 .skill-name {
-  font-size: 1rem;
+  font-size: 1.05rem;
   font-weight: 700;
   margin: 0 0 0.15rem;
 }
@@ -116,6 +125,44 @@ onUnmounted(() => observer?.disconnect())
   font-size: 0.8rem;
   color: var(--accent);
   font-weight: 600;
+}
+
+.skill-bar-track {
+  height: 6px;
+  background: var(--border);
+  border-radius: 3px;
+  overflow: visible; /* Let the glow pulse dot spill out */
+  position: relative;
+}
+
+.skill-bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  background: linear-gradient(90deg, var(--accent) 0%, var(--accent-alt) 100%);
+  width: 0%;
+  transition: width 1.5s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 0 10px rgba(59, 130, 246, 0.4);
+  position: relative;
+}
+
+/* Glowing pulse tip on the skill progress bars */
+.skill-bar-fill::after {
+  content: '';
+  position: absolute;
+  right: -2px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 8px #fff, 0 0 12px var(--accent);
+  animation: pulse-glow-dot 1.2s infinite alternate;
+}
+
+@keyframes pulse-glow-dot {
+  0% { transform: translateY(-50%) scale(0.8); opacity: 0.6; }
+  100% { transform: translateY(-50%) scale(1.2); opacity: 1; }
 }
 
 .skill-tags {

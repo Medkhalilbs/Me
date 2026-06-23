@@ -246,7 +246,7 @@ onMounted(loadMessages)
 
 .message-card.unread-card {
   border-color: var(--border-hover);
-  background: rgba(99, 102, 241, 0.02);
+  background: rgba(59, 130, 246, 0.02);
 }
 
 .msg-header {

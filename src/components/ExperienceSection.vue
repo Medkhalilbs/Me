@@ -1,5 +1,6 @@
 <template>
   <section id="experience" class="section">
+    <div class="section-number">03</div>
     <div class="container">
       <div class="section-badge reveal">💼 Experience</div>
       <h2 class="section-title reveal">Professional Journey</h2>
@@ -116,7 +117,7 @@ defineProps<{ experiences: Experience[] }>()
 
 .current-badge {
   background: var(--accent);
-  color: #fff;
+  color: var(--bg-primary);
   padding: 0.15rem 0.5rem;
   border-radius: 50px;
   font-size: 0.7rem;
