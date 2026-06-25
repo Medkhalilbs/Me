@@ -58,7 +58,7 @@ function initSchema(): void {
       callout_title TEXT NOT NULL DEFAULT '',
       callout_text TEXT NOT NULL DEFAULT '',
       admin_password_hash TEXT NOT NULL DEFAULT '',
-      admin_secret_path TEXT NOT NULL DEFAULT 'admin-mkbs-2026',
+      admin_secret_path TEXT NOT NULL DEFAULT 'admin',
       profile_image_path TEXT DEFAULT NULL
     );
   `)
@@ -352,7 +352,7 @@ function seedSectionSettings(): void {
 }
 
 function seedData(): void {
-  const hash = bcrypt.hashSync('mkbs@admin2026', 10)
+  const hash = bcrypt.hashSync('admin2026', 10)
 
   const aboutParagraphs = JSON.stringify([
     'Software engineer with 5 years of experience in full-stack development, IT consulting, and system integration. Skilled in building scalable web applications using modern front-end and back-end technologies.',
@@ -375,7 +375,7 @@ function seedData(): void {
     'From Embedded Systems to Full-Stack Engineering',
     'My background in embedded systems gave me a unique perspective on performance, optimization, and system-level thinking that I now apply to building scalable web applications.',
     hash,
-    'admin-mkbs-2026',
+    'admin',
   ])
 
   // Hero stats

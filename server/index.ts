@@ -24,7 +24,13 @@ const app = express()
 const PORT = process.env.PORT || 3001
 
 // Middleware
-app.use(cors({ origin: 'http://localhost:5173', credentials: true }))
+// To this:
+const isProduction = process.env.NODE_ENV === 'production'
+app.use(cors({
+  origin: isProduction ? true : 'http://localhost:5173',
+  credentials: true
+}))
+
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 
@@ -53,6 +59,16 @@ app.use('/api/images', express.static(path.resolve(__dirname, '../data/images'))
 
 // Health check
 app.get('/api/health', (_req, res) => res.json({ status: 'ok', ts: Date.now() }))
+
+// Serve built frontend in production
+if (isProduction) {
+  const distPath = path.resolve(__dirname, '../dist')
+  app.use(express.static(distPath))
+  // SPA fallback — all non-API routes go to index.html
+  app.get('*', (_req, res) => {
+    res.sendFile(path.join(distPath, 'index.html'))
+  })
+}
 
 app.listen(PORT, () => {
   console.log(`🚀 MKBS Portfolio API running at http://localhost:${PORT}`)

@@ -6,17 +6,20 @@ A dynamic, state-of-the-art developer portfolio web application built with **Vue
 
 - **Premium Design & Interactions**: Canvas particle system, mouse-tracking glow, smooth count-up metrics, responsive layouts, and interactive navigation.
 - **Dynamic Content**: Data-driven pages loading directly from a local SQLite database.
+- **Dynamic Section Visibility**: Toggle any portfolio section on/off. Hiding a section instantly removes it from the page flow and filters it out of the main navigation menu dynamically.
 - **Command Palette (⌘K / Ctrl+K)**: Instant keyboard-driven navigation and search.
 - **Dark/Light Mode**: Synced theme toggle with localStorage persistence.
 - **Advanced Admin Panel**: Hidden administrative gate to manage:
-  - Profile & Hero statements
+  - Profile & Hero statements with image upload/deletion
+  - Spoken languages fluency (native/fluent/professional with interactive circular gauges)
+  - Section visibility configuration toggles
   - Skill categories and sub-skill tags
-  - Interactive experience timeline (Volkswagen FS, Cassup, etc.)
-  - Project cards (case studies: problems, solutions, business impact, features list)
+  - Interactive experience timeline (highlighted employer vs client chips)
+  - Project cards (case studies: problems, solutions, business impact, and cover image uploads)
   - Education history
   - Technology stack pills
   - Value propositions ("Why Work With Me")
-  - Verified Certifications (AWS, etc.)
+  - Verified Certifications with status tracking (Active, In Progress, Expired)
   - Testimonials
   - PDF CV uploads (Language-specific versions, e.g. EN, FR)
   - Form inquiry inbox (read/unread messages, delete)
@@ -62,8 +65,8 @@ On first run, the backend will automatically initialize the database schema and 
 
 The admin panel is protected by a hidden URL path and password authentication.
 
-- **Default Hidden URL**: `http://localhost:5173/admin-mkbs-2026`
-- **Default Password**: `mkbs@admin2026`
+- **Default Hidden URL**: `http://localhost:5173/admin`
+- **Default Password**: `admin2026`
 
 > [!IMPORTANT]
 > Change the password immediately upon your first login under the **Settings** panel. You can also customize the secret access URL path there.
