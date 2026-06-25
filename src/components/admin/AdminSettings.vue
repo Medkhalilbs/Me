@@ -73,7 +73,7 @@
               type="text"
               class="form-input"
               required
-              placeholder="admin-mkbs-2026"
+              placeholder="admin"
             />
           </div>
         </div>
