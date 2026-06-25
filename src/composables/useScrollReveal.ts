@@ -3,7 +3,12 @@ import { onMounted, onUnmounted, nextTick } from 'vue'
 export function useScrollReveal() {
   let observer: IntersectionObserver | null = null
 
-  const initObserver = () => {
+  const initObserver = async () => {
+    await nextTick()
+    
+    const elements = document.querySelectorAll('.reveal')
+    if (elements.length === 0) return
+
     if (observer) {
       observer.disconnect()
     }
@@ -20,7 +25,7 @@ export function useScrollReveal() {
       { threshold: 0.1, rootMargin: '0px 0px -60px 0px' }
     )
 
-    document.querySelectorAll('.reveal').forEach((el) => {
+    elements.forEach((el) => {
       observer?.observe(el)
     })
   }

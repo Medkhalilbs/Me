@@ -1,49 +1,86 @@
 <template>
   <section id="about" class="section">
-    <div class="section-number">01</div>
+    <div class="section-number"></div>
     <div class="container">
-      <div class="section-badge reveal">👤 About Me</div>
+      <div class="section-badge reveal">// 01 — ABOUT</div>
       <h2 class="section-title reveal">The Mind Behind the Code</h2>
-      <p class="section-subtitle reveal">Full-stack engineer with roots in embedded systems</p>
+      <p class="section-subtitle reveal">Full-stack software engineer with roots in hardware systems</p>
 
-      <div class="about-grid">
-        <!-- Text -->
-        <div class="about-text">
-          <p
-            v-for="(para, i) in profile?.about_paragraphs"
-            :key="i"
-            class="reveal about-para"
-            :style="{ animationDelay: `${i * 0.1}s` }"
-          >{{ para }}</p>
+      <div class="about-layout-grid">
+        <!-- Left: Profile card & status & languages -->
+        <div class="about-left reveal">
+          <!-- Profile image card -->
+          <div class="profile-image-card">
+            <div class="profile-image-placeholder">
+              <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="var(--accent-navy)" stroke-width="1.5">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                <circle cx="12" cy="7" r="4"/>
+              </svg>
+            </div>
+          </div>
 
-          <!-- Callout -->
-          <div v-if="profile?.callout_title" class="about-callout reveal">
-            <div class="callout-icon">💡</div>
-            <div>
-              <h4 class="callout-title">{{ profile.callout_title }}</h4>
-              <p class="callout-text">{{ profile.callout_text }}</p>
+          <!-- Available for work badge (bronze) -->
+          <div class="status-badge-container">
+            <span class="status-pulse-dot"></span>
+            <span class="status-text">Available for Remote &amp; International Work</span>
+          </div>
+
+          <!-- Segmented Languages bar -->
+          <div class="languages-section">
+            <div class="lang-header">// languages</div>
+            <div class="lang-bar">
+              <div class="lang-segment arabic" style="width: 45%;">
+                <span>AR (Native)</span>
+              </div>
+              <div class="lang-segment french" style="width: 35%;">
+                <span>FR (Fluent)</span>
+              </div>
+              <div class="lang-segment english" style="width: 20%;">
+                <span>EN (Prof.)</span>
+              </div>
+            </div>
+            <div class="lang-labels">
+              <span>Arabic</span>
+              <span>French</span>
+              <span>English</span>
             </div>
           </div>
         </div>
 
-        <!-- Timeline: Education -->
-        <div class="about-sidebar">
-          <h3 class="reveal sidebar-title">Education</h3>
-          <div class="timeline reveal">
-            <div class="timeline-line"></div>
-            <div
-              v-for="(edu, i) in education"
-              :key="edu.id"
-              class="timeline-entry"
-              :style="{ animationDelay: `${i * 0.15}s` }"
-            >
-              <div class="timeline-dot"></div>
-              <div class="timeline-content">
-                <div class="timeline-period">{{ edu.start_year }} – {{ edu.end_year }}</div>
-                <h4 class="timeline-school">{{ edu.school }}</h4>
-                <p class="timeline-degree">{{ edu.degree }}</p>
-                <p class="timeline-desc">{{ edu.description }}</p>
-              </div>
+        <!-- Right: Bio & fact cards -->
+        <div class="about-right">
+          <p class="reveal about-paragraph">
+            Software engineer with 5 years of experience in full-stack development, IT consulting, and system integration. Skilled in designing and building scalable web applications using modern front-end and back-end technologies.
+          </p>
+          <p class="reveal about-paragraph">
+            My journey began in embedded systems — programming ERIKA OS on AURIX microcontrollers, working with CAN bus and GPIO. Today I architect cloud-native applications with Vue.js, Spring Boot, and AWS. This rare combination gives me a deep understanding of systems at every level, from silicon to cloud.
+          </p>
+
+          <!-- Fact counter grid -->
+          <div class="facts-grid reveal" ref="factsRef">
+            <div class="fact-card card">
+              <span class="fact-num">{{ animatedFacts.exp }}+</span>
+              <span class="fact-label">Years Experience</span>
+            </div>
+            <div class="fact-card card">
+              <span class="fact-num">{{ animatedFacts.projects }}+</span>
+              <span class="fact-label">Projects Shipped</span>
+            </div>
+            <div class="fact-card card">
+              <span class="fact-num">{{ animatedFacts.tech }}+</span>
+              <span class="fact-label">Technologies</span>
+            </div>
+            <div class="fact-card card">
+              <span class="fact-num">{{ animatedFacts.languages }}</span>
+              <span class="fact-label">Languages Spoken</span>
+            </div>
+            <div class="fact-card card">
+              <span class="fact-num">{{ animatedFacts.certs }}</span>
+              <span class="fact-label">Certification</span>
+            </div>
+            <div class="fact-card card">
+              <span class="fact-num">{{ animatedFacts.companies }}</span>
+              <span class="fact-label">Companies Worked With</span>
             </div>
           </div>
         </div>
@@ -53,94 +90,264 @@
 </template>
 
 <script setup lang="ts">
-import type { Profile, Education } from '@/types'
+import { ref, onMounted, onUnmounted } from 'vue'
+import type { Profile } from '@/types'
 
 defineProps<{
   profile: Profile | null
-  education: Education[]
 }>()
+
+const animatedFacts = ref({
+  exp: 0, projects: 0, tech: 0, languages: 0, certs: 0, companies: 0
+})
+
+const factsRef = ref<HTMLElement | null>(null)
+let observer: IntersectionObserver | null = null
+
+const triggerCountUp = () => {
+  const duration = 1500
+  const startTime = performance.now()
+  const update = (now: number) => {
+    const elapsed = now - startTime
+    const progress = Math.min(elapsed / duration, 1)
+    const ease = progress * (2 - progress)
+    animatedFacts.value.exp = Math.floor(ease * 5)
+    animatedFacts.value.projects = Math.floor(ease * 20)
+    animatedFacts.value.tech = Math.floor(ease * 15)
+    animatedFacts.value.languages = Math.floor(ease * 3)
+    animatedFacts.value.certs = Math.floor(ease * 1)
+    animatedFacts.value.companies = Math.floor(ease * 4)
+    if (progress < 1) {
+      requestAnimationFrame(update)
+    } else {
+      animatedFacts.value = { exp: 5, projects: 20, tech: 15, languages: 3, certs: 1, companies: 4 }
+    }
+  }
+  requestAnimationFrame(update)
+}
+
+onMounted(() => {
+  observer = new IntersectionObserver((entries) => {
+    if (entries[0].isIntersecting) {
+      triggerCountUp()
+      observer?.disconnect()
+    }
+  }, { threshold: 0.15 })
+  if (factsRef.value) observer.observe(factsRef.value)
+})
+
+onUnmounted(() => {
+  if (observer) observer.disconnect()
+})
 </script>
 
 <style scoped>
-.about-grid {
+.about-layout-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 340px 1fr;
   gap: 4rem;
   align-items: start;
+  position: relative;
+  z-index: 1;
 }
 
-.about-para {
-  color: var(--text-secondary);
-  margin-bottom: 1.25rem;
-  line-height: 1.8;
-}
-
-.about-callout {
+/* Left Column */
+.about-left {
   display: flex;
-  gap: 1.25rem;
-  align-items: flex-start;
-  background: var(--accent-glow);
-  border: 1px solid rgba(59, 130, 246, 0.2);
-  border-radius: var(--radius);
-  padding: 1.5rem;
-  margin-top: 2rem;
+  flex-direction: column;
+  align-items: center;
 }
 
-.callout-icon { font-size: 1.8rem; flex-shrink: 0; }
-.callout-title { font-size: 1rem; font-weight: 700; margin: 0 0 0.4rem; color: var(--accent); }
-.callout-text { font-size: 0.9rem; color: var(--text-secondary); margin: 0; }
-
-.sidebar-title {
-  font-size: 1.1rem;
-  font-weight: 700;
+.profile-image-card {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  background: var(--bg-card);
+  /* 1px navy border on profile card */
+  border: 1px solid rgba(74, 125, 191, 0.25);
+  border-radius: var(--radius-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
   margin-bottom: 1.5rem;
-  color: var(--text-secondary);
+}
+
+.profile-image-card:hover {
+  border-color: rgba(74, 125, 191, 0.5);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-hover);
+}
+
+.profile-image-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, rgba(74, 125, 191, 0.04), rgba(74, 125, 191, 0.01));
+}
+
+/* Available for work badge — muted navy accent */
+.status-badge-container {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.4rem 0.9rem;
+  border-radius: var(--radius-sm);
+  background: var(--accent-navy-subtle);
+  border: 1px solid rgba(74, 125, 191, 0.2);
+  margin-bottom: 2rem;
+}
+
+.status-pulse-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--accent-navy);
+  animation: pulse-navy 2s ease-in-out infinite alternate;
+}
+
+@keyframes pulse-navy {
+  0% { opacity: 0.5; }
+  100% { opacity: 1; }
+}
+
+.status-text {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
+  color: var(--accent-bronze);
 }
 
-.timeline {
-  position: relative;
-  padding-left: 2.5rem;
+/* Languages bar */
+.languages-section {
+  width: 100%;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.25rem;
 }
 
-.timeline-entry {
-  display: flex;
-  gap: 1.25rem;
-  margin-bottom: 2rem;
-  position: relative;
-}
-
-.timeline-content { flex: 1; }
-
-.timeline-period {
-  font-size: 0.78rem;
-  color: var(--accent);
-  font-weight: 600;
+.lang-header {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--accent-navy);
+  text-transform: uppercase;
   letter-spacing: 0.05em;
-  margin-bottom: 0.25rem;
+  margin-bottom: 0.75rem;
+  opacity: 0.8;
 }
 
-.timeline-school {
-  font-size: 1rem;
-  font-weight: 700;
-  margin: 0 0 0.25rem;
+.lang-bar {
+  display: flex;
+  height: 20px;
+  background: var(--bg-secondary);
+  border-radius: 3px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  margin-bottom: 0.5rem;
 }
 
-.timeline-degree {
-  font-size: 0.82rem;
-  color: var(--text-secondary);
-  margin: 0 0 0.5rem;
+.lang-segment {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  font-weight: 600;
+  height: 100%;
 }
 
-.timeline-desc {
-  font-size: 0.82rem;
+.arabic {
+  background: rgba(74, 125, 191, 0.15);
+  color: var(--accent-navy);
+  border-right: 1px solid var(--border);
+}
+
+.french {
+  background: rgba(74, 125, 191, 0.08);
+  color: var(--accent-navy);
+  opacity: 0.75;
+  border-right: 1px solid var(--border);
+}
+
+.english {
+  background: rgba(255, 255, 255, 0.02);
   color: var(--text-muted);
-  margin: 0;
-  line-height: 1.6;
 }
 
-@media (max-width: 900px) {
-  .about-grid { grid-template-columns: 1fr; gap: 2rem; }
+.lang-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+/* Right Column */
+.about-right {
+  display: flex;
+  flex-direction: column;
+}
+
+.about-paragraph {
+  font-size: 1.02rem;
+  color: var(--text-secondary);
+  line-height: 1.75;
+  margin: 0 0 1.5rem;
+}
+
+.facts-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.1rem;
+  margin-top: 1.5rem;
+}
+
+.fact-card {
+  padding: 1.1rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.2rem;
+  border-radius: var(--radius);
+}
+
+/* Fact numbers in accent-navy */
+.fact-num {
+  font-family: var(--font-mono);
+  font-size: 1.65rem;
+  font-weight: 700;
+  color: var(--accent-navy);
+  line-height: 1;
+}
+
+.fact-label {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  line-height: 1.3;
+  margin-top: 0.2rem;
+}
+
+@media (max-width: 1024px) {
+  .about-layout-grid {
+    grid-template-columns: 1fr;
+    gap: 3rem;
+  }
+  .about-left {
+    max-width: 340px;
+    margin: 0 auto;
+    width: 100%;
+  }
+}
+
+@media (max-width: 600px) {
+  .facts-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
 }
 </style>

@@ -1,5 +1,5 @@
 <template>
-  <div class="admin-wrapper">
+  <div class="admin-wrapper" :class="{ 'admin-dashboard-layout': adminStore.isAuthenticated }">
     <!-- Login Gate -->
     <div v-if="!adminStore.isAuthenticated" class="admin-login-page">
       <div class="login-card card">
@@ -70,7 +70,6 @@ import AdminEducation     from '@/components/admin/AdminEducation.vue'
 import AdminTechStack     from '@/components/admin/AdminTechStack.vue'
 import AdminWhyMe         from '@/components/admin/AdminWhyMe.vue'
 import AdminCertifications from '@/components/admin/AdminCertifications.vue'
-import AdminTestimonials  from '@/components/admin/AdminTestimonials.vue'
 import AdminCVs           from '@/components/admin/AdminCVs.vue'
 import AdminMessages      from '@/components/admin/AdminMessages.vue'
 import AdminSettings      from '@/components/admin/AdminSettings.vue'
@@ -94,7 +93,6 @@ const navItems = [
   { id: 'tech-stack',    icon: '🛠', label: 'Tech Stack' },
   { id: 'why-me',        icon: '✨', label: 'Why Work With Me' },
   { id: 'certifications',icon: '🏆', label: 'Certifications' },
-  { id: 'testimonials',  icon: '💬', label: 'Testimonials' },
   { id: 'cvs',           icon: '📄', label: 'CVs' },
   { id: 'messages',      icon: '📬', label: 'Messages' },
   { id: 'settings',      icon: '⚙️', label: 'Settings' },
@@ -110,7 +108,6 @@ const panelMap: Record<string, unknown> = {
   'tech-stack':     AdminTechStack,
   'why-me':         AdminWhyMe,
   'certifications': AdminCertifications,
-  'testimonials':   AdminTestimonials,
   'cvs':            AdminCVs,
   'messages':       AdminMessages,
   'settings':       AdminSettings,
@@ -121,6 +118,7 @@ const activeComponent = computed(() => panelMap[activePanel.value] || AdminProfi
 
 <style scoped>
 .admin-wrapper { min-height: 100vh; position: relative; z-index: 10; }
+.admin-dashboard-layout { display: flex; min-height: 100vh; }
 
 /* Ensure pointer-events are always active in admin to prevent click blockages */
 .admin-sidebar,
@@ -135,7 +133,7 @@ const activeComponent = computed(() => panelMap[activePanel.value] || AdminProfi
   display: flex;
   align-items: center;
   justify-content: center;
-  background: radial-gradient(ellipse at top left, rgba(59, 130, 246, 0.08) 0%, transparent 60%);
+  background: radial-gradient(ellipse at top left, rgba(74, 125, 191, 0.08) 0%, transparent 60%);
 }
 
 .login-card {
@@ -206,9 +204,17 @@ const activeComponent = computed(() => panelMap[activePanel.value] || AdminProfi
   width: 100%;
   text-align: left;
   transition: all var(--transition);
+  border-left: 2px solid transparent;
 }
 
-.sidebar-link.active,
+.sidebar-link.active {
+  background: var(--accent-glow);
+  color: var(--accent);
+  border-left: 2px solid var(--accent-navy);
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
 .sidebar-link:hover {
   background: var(--accent-glow);
   color: var(--accent);
@@ -217,6 +223,19 @@ const activeComponent = computed(() => panelMap[activePanel.value] || AdminProfi
 .admin-sidebar {
   display: flex;
   flex-direction: column;
+  background: var(--bg-card);
+  border-right: 1px solid var(--border);
+  width: 260px;
+  height: 100vh;
+  position: sticky;
+  top: 0;
+  flex-shrink: 0;
+}
+
+.admin-content {
+  flex: 1;
+  padding: 2.5rem;
+  min-height: 100vh;
 }
 
 .sidebar-footer {
@@ -225,5 +244,59 @@ const activeComponent = computed(() => panelMap[activePanel.value] || AdminProfi
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
+}
+
+/* Mobile responsive override */
+@media (max-width: 767px) {
+  .admin-dashboard-layout {
+    display: block;
+  }
+  .admin-sidebar {
+    width: 100%;
+    height: auto;
+    position: relative;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+  }
+  .sidebar-logo {
+    padding: 1rem;
+    text-align: center;
+  }
+  .sidebar-nav {
+    display: flex;
+    flex-direction: row;
+    overflow-x: auto;
+    padding: 0.5rem 1rem;
+    gap: 0.5rem;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+    flex: none;
+  }
+  .sidebar-link {
+    width: auto;
+    padding: 0.5rem 0.85rem;
+    flex-shrink: 0;
+  }
+  .sidebar-link.active {
+    border-left: none;
+    border-bottom: 2px solid var(--accent-navy);
+    border-top-left-radius: 8px;
+    border-bottom-left-radius: 8px;
+  }
+  .sidebar-footer {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    border-top: 1px solid var(--border);
+  }
+  .sidebar-footer .sidebar-link {
+    width: auto;
+  }
+  .admin-content {
+    padding: 1.5rem;
+    min-height: auto;
+  }
 }
 </style>

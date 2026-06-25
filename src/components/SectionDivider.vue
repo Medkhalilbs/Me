@@ -1,56 +1,42 @@
 <template>
-  <div ref="dividerRef" class="section-divider-container">
-    <div class="divider-line" :class="{ active: isVisible }"></div>
+  <div class="section-divider-wrap">
+    <div class="divider-line"></div>
+    <div class="divider-dot"></div>
+    <div class="divider-line"></div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
-
-const dividerRef = ref<HTMLElement | null>(null)
-const isVisible = ref(false)
-let observer: IntersectionObserver | null = null
-
-onMounted(() => {
-  observer = new IntersectionObserver((entries) => {
-    entries.forEach((entry) => {
-      if (entry.isIntersecting) {
-        isVisible.value = true
-        observer?.unobserve(entry.target)
-      }
-    })
-  }, { threshold: 0.2 })
-
-  if (dividerRef.value) {
-    observer.observe(dividerRef.value)
-  }
-})
-
-onUnmounted(() => {
-  observer?.disconnect()
-})
+// Static presentation — no reactive logic needed
 </script>
 
 <style scoped>
-.section-divider-container {
+.section-divider-wrap {
   width: 100%;
+  max-width: var(--container-max);
+  margin: 0 auto;
+  padding: 1.5rem 2rem;
   display: flex;
-  justify-content: center;
   align-items: center;
-  height: 1px;
-  overflow: hidden;
-  background: transparent;
+  gap: 0;
+  position: relative;
+  z-index: 1;
 }
 
 .divider-line {
-  width: 0%;
+  flex: 1;
   height: 1px;
-  background: linear-gradient(90deg, transparent, var(--accent) 50%, transparent);
-  transition: width 2.2s cubic-bezier(0.16, 1, 0.3, 1);
+  background: var(--border);
   opacity: 0.3;
 }
 
-.divider-line.active {
-  width: 100%;
+.divider-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--accent-navy);
+  flex-shrink: 0;
+  margin: 0 1rem;
+  opacity: 0.6;
 }
 </style>

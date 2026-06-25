@@ -1,30 +1,51 @@
 <template>
   <section id="certifications" class="section" style="background: var(--bg-secondary);">
-    <div class="section-number">06</div>
+    <div class="section-number"></div>
     <div class="container">
-      <div class="section-badge reveal">🎓 Certifications</div>
+      <div class="section-badge reveal">// 07 — CERTIFICATIONS</div>
       <h2 class="section-title reveal">Credentials & Achievements</h2>
-      <p class="section-subtitle reveal">Verified certifications from leading technology organizations</p>
+      <p class="section-subtitle reveal">Verified cloud computing and enterprise consulting qualifications</p>
 
-      <div class="certs-grid">
+      <div class="cert-card-wrapper reveal">
+        <!-- Render the single primary certification -->
         <div
-          v-for="(cert, i) in certifications"
+          v-for="cert in certifications"
           :key="cert.id"
-          class="card cert-card reveal"
-          :style="{ animationDelay: `${i * 0.12}s` }"
+          class="card cert-digital-card"
         >
-          <div class="cert-header">
-            <div class="cert-icon">🏆</div>
-            <div v-if="cert.verified" class="verified-badge">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-                <polyline points="20 6 9 17 4 12"/>
+          <!-- Certificate Header -->
+          <div class="cert-top">
+            <div class="aws-logo-area">
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--accent-bronze)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/>
+                <path d="M12 10v4"/>
+                <path d="m14 12-2 2-2-2"/>
               </svg>
-              Verified
+            </div>
+            
+            <div class="verified-badge">
+              <span class="lock-icon">🔒</span> Verified Credential
             </div>
           </div>
-          <h3 class="cert-name">{{ cert.name }}</h3>
-          <div class="cert-issuer">{{ cert.issuer }}</div>
-          <p class="cert-desc">{{ cert.description }}</p>
+
+          <!-- Certificate Content -->
+          <div class="cert-body">
+            <span class="cert-code-label">Ref: AWS-CCP-2026</span>
+            <h3 class="cert-title-name">{{ cert.name }}</h3>
+            <div class="cert-authority">{{ cert.issuer }}</div>
+            <p class="cert-explanation">{{ cert.description }}</p>
+          </div>
+
+          <!-- Certificate Footer -->
+          <div class="cert-footer">
+            <div class="cert-signature-block">
+              <span class="sig-label">ISSUING ORGANIZATION</span>
+              <span class="sig-value">Amazon Web Services</span>
+            </div>
+            <div class="cert-status-block">
+              <span class="status-indicator-dot"></span> Active Status
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -33,41 +54,158 @@
 
 <script setup lang="ts">
 import type { Certification } from '@/types'
+
 defineProps<{ certifications: Certification[] }>()
 </script>
 
 <style scoped>
-.certs-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 1.5rem;
+.cert-card-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  z-index: 1;
 }
 
-.cert-card { padding: 2rem; }
+.cert-digital-card {
+  width: 100%;
+  max-width: 550px;
+  background: var(--bg-card);
+  border: 1px solid var(--accent-navy) !important;
+  border-radius: var(--radius-lg);
+  padding: 2.25rem;
+  box-shadow: var(--shadow-navy) !important;
+  transition: all var(--transition);
+  position: relative;
+}
 
-.cert-header {
+.cert-digital-card::after {
+  background: var(--accent-navy) !important;
+}
+
+.cert-digital-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 0 40px rgba(74, 125, 191, 0.10) !important;
+}
+
+/* Header Area */
+.cert-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.75rem;
+}
+
+.aws-logo-area {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  margin-bottom: 1rem;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  background: rgba(74, 125, 191, 0.05);
+  border: 1px solid rgba(74, 125, 191, 0.2);
+  border-radius: 8px;
 }
-
-.cert-icon { font-size: 2rem; }
 
 .verified-badge {
   display: flex;
   align-items: center;
-  gap: 0.3rem;
-  background: rgba(16, 185, 129, 0.1);
-  color: var(--success);
-  border: 1px solid rgba(16, 185, 129, 0.3);
-  border-radius: 50px;
-  padding: 0.25rem 0.75rem;
-  font-size: 0.75rem;
-  font-weight: 700;
+  gap: 0.4rem;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--accent-navy);
+  background: var(--accent-navy-subtle);
+  border: 1px solid rgba(74, 125, 191, 0.25);
+  padding: 0.3rem 0.85rem;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
-.cert-name { font-size: 1rem; font-weight: 700; margin: 0 0 0.3rem; }
-.cert-issuer { color: var(--accent); font-size: 0.85rem; font-weight: 600; margin-bottom: 0.75rem; }
-.cert-desc { color: var(--text-secondary); font-size: 0.85rem; line-height: 1.6; margin: 0; }
+.lock-icon {
+  font-size: 0.8rem;
+}
+
+/* Body Content */
+.cert-body {
+  margin-bottom: 2rem;
+}
+
+.cert-code-label {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  margin-bottom: 0.5rem;
+}
+
+.cert-title-name {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 0.4rem;
+  letter-spacing: -0.01em;
+}
+
+.cert-authority {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--accent-navy);
+  margin-bottom: 1rem;
+}
+
+.cert-explanation {
+  font-size: 0.88rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* Footer Section */
+.cert-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  border-top: 1px solid var(--border);
+  padding-top: 1.25rem;
+}
+
+.cert-signature-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.sig-label {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  letter-spacing: 0.05em;
+}
+
+.sig-value {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.cert-status-block {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--success);
+  font-weight: 600;
+}
+
+.status-indicator-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: var(--success);
+  box-shadow: 0 0 6px var(--success);
+}
 </style>

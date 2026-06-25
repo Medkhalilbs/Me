@@ -1,6 +1,7 @@
 <template>
   <div>
-    <LoadingScreen />
+    <!-- Conditional loading screen: gets completely removed from DOM upon finished event -->
+    <LoadingScreen v-if="loadingScreenVisible" @finished="loadingScreenVisible = false" />
 
     <!-- Scroll progress bar -->
     <div id="scroll-progress" :style="{ width: scrollPct + '%' }"></div>
@@ -11,7 +12,7 @@
     <main v-if="!store.loading">
       <HeroSection        :profile="store.profile" :hero-stats="store.heroStats" :cvs="store.cvs" />
       <SectionDivider />
-      <AboutSection       :profile="store.profile" :education="store.education" />
+      <AboutSection       :profile="store.profile" />
       <SectionDivider />
       <SkillsSection      :skills="store.skills" />
       <SectionDivider />
@@ -19,11 +20,11 @@
       <SectionDivider />
       <ProjectsSection    :projects="store.projects" />
       <SectionDivider />
+      <EducationSection   :education="store.education" />
+      <SectionDivider />
       <TechStackSection   :tech-stack="store.techStack" />
       <SectionDivider />
       <CertificationsSection :certifications="store.certifications" />
-      <SectionDivider />
-      <TestimonialsSection   :testimonials="store.testimonials" />
       <SectionDivider />
       <WhyWorkWithMe      :why-cards="store.whyCards" />
       <SectionDivider />
@@ -62,9 +63,9 @@ import AboutSection from '@/components/AboutSection.vue'
 import SkillsSection from '@/components/SkillsSection.vue'
 import ExperienceSection from '@/components/ExperienceSection.vue'
 import ProjectsSection from '@/components/ProjectsSection.vue'
+import EducationSection from '@/components/EducationSection.vue'
 import TechStackSection from '@/components/TechStackSection.vue'
 import CertificationsSection from '@/components/CertificationsSection.vue'
-import TestimonialsSection from '@/components/TestimonialsSection.vue'
 import WhyWorkWithMe from '@/components/WhyWorkWithMe.vue'
 import ContactSection from '@/components/ContactSection.vue'
 import FooterComponent from '@/components/FooterComponent.vue'
@@ -72,8 +73,9 @@ import SectionDivider from '@/components/SectionDivider.vue'
 
 const store = usePortfolioStore()
 const { theme, toggle: toggleTheme } = useTheme()
-
 const { initObserver } = useScrollReveal()
+
+const loadingScreenVisible = ref(true)
 
 // Réinitialiser l'observer quand les données sont chargées
 watch(() => store.loading, (loading) => {

@@ -56,16 +56,16 @@ const selectedIndex = ref(0)
 const inputRef = ref<HTMLInputElement | null>(null)
 
 const commands = [
-  { icon: '🏠', label: 'Hero',           description: 'Go to the top',                      href: '#hero' },
-  { icon: '👤', label: 'About',          description: 'Learn more about me',                 href: '#about' },
-  { icon: '⚡', label: 'Skills',         description: 'Technical skills & expertise',        href: '#skills' },
-  { icon: '💼', label: 'Experience',     description: 'Work history & professional roles',   href: '#experience' },
+  { icon: '🏠', label: 'Hero / Home',    description: 'Go to the top boot sequence',        href: '#hero' },
+  { icon: '👤', label: 'About',          description: 'Learn more about my background',      href: '#about' },
+  { icon: '⚡', label: 'Skills',         description: 'Technical skills & architecture',     href: '#skills' },
+  { icon: '💼', label: 'Experience',     description: 'Work history & professional timeline',href: '#experience' },
   { icon: '🚀', label: 'Projects',       description: 'Featured projects & case studies',    href: '#projects' },
-  { icon: '🛠',  label: 'Tech Stack',    description: 'Technologies I work with',            href: '#tech-stack' },
-  { icon: '🎓', label: 'Certifications', description: 'Certificates & achievements',         href: '#certifications' },
-  { icon: '💬', label: 'Testimonials',   description: 'What colleagues say',                 href: '#testimonials' },
-  { icon: '✨', label: 'Why Work With Me', description: 'Why choose me',                    href: '#why-me' },
-  { icon: '📬', label: 'Contact',        description: 'Get in touch',                        href: '#contact' },
+  { icon: '🎓', label: 'Education',      description: 'Academic background & degrees',       href: '#education' },
+  { icon: '🛠',  label: 'Tech Stack',    description: 'All technologies & tools used',       href: '#tech-stack' },
+  { icon: '🏆', label: 'Certifications', description: 'AWS certificates & credentials',       href: '#certifications' },
+  { icon: '✨', label: 'Why Work With Me', description: 'Enterprise consulting value props',  href: '#why-me' },
+  { icon: '📬', label: 'Contact',        description: 'Get in touch / send message',         href: '#contact' },
 ]
 
 const filtered = computed(() => {
@@ -100,6 +100,30 @@ watch(() => props.open, async (v) => {
 </script>
 
 <style scoped>
+.command-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(8px);
+  z-index: 9000;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 15vh;
+}
+
+.command-palette {
+  width: 600px;
+  max-width: calc(100vw - 2rem);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card), var(--shadow-navy);
+  overflow: hidden;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
 .command-input-wrap {
   display: flex;
   align-items: center;
@@ -115,7 +139,7 @@ watch(() => props.open, async (v) => {
   outline: none;
   color: var(--text-primary);
   font-size: 1rem;
-  font-family: inherit;
+  font-family: var(--font-mono);
 }
 .command-input::placeholder { color: var(--text-muted); }
 
@@ -125,11 +149,12 @@ watch(() => props.open, async (v) => {
   border-radius: 4px;
   padding: 0.15rem 0.4rem;
   font-size: 0.7rem;
+  font-family: var(--font-mono);
   color: var(--text-muted);
 }
 
 .command-results {
-  max-height: 380px;
+  max-height: 350px;
   overflow-y: auto;
   padding: 0.5rem;
 }
@@ -139,14 +164,19 @@ watch(() => props.open, async (v) => {
   align-items: center;
   gap: 0.9rem;
   padding: 0.75rem 1rem;
-  border-radius: 10px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
   transition: all var(--transition);
+  border: 1px solid transparent;
 }
-.command-item.active,
-.command-item:hover { background: var(--accent-glow); }
 
-.command-icon { font-size: 1.2rem; width: 28px; text-align: center; }
+.command-item.active,
+.command-item:hover {
+  background: var(--accent-navy-subtle);
+  border-color: rgba(74, 125, 191, 0.15);
+}
+
+.command-icon { font-size: 1.25rem; width: 28px; text-align: center; }
 
 .command-label { font-weight: 600; font-size: 0.9rem; color: var(--text-primary); }
 .command-desc  { font-size: 0.78rem; color: var(--text-secondary); }
@@ -154,6 +184,7 @@ watch(() => props.open, async (v) => {
 .command-empty {
   text-align: center;
   color: var(--text-muted);
+  font-family: var(--font-mono);
   padding: 2rem;
   font-size: 0.9rem;
 }

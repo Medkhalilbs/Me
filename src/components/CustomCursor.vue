@@ -35,7 +35,7 @@ const updatePosition = (e: MouseEvent) => {
   mouseY = e.clientY
   dotX.value = mouseX
   dotY.value = mouseY
-  
+
   if (!showCursor.value) {
     showCursor.value = true
     ringX.value = mouseX
@@ -46,7 +46,7 @@ const updatePosition = (e: MouseEvent) => {
 const handleMouseOver = (e: MouseEvent) => {
   const target = e.target as HTMLElement
   if (!target) return
-  
+
   if (
     target.tagName === 'A' ||
     target.tagName === 'BUTTON' ||
@@ -62,7 +62,7 @@ const handleMouseOver = (e: MouseEvent) => {
 }
 
 const animateRing = () => {
-  const ease = 0.15
+  const ease = 0.14
   ringX.value += (mouseX - ringX.value) * ease
   ringY.value += (mouseY - ringY.value) * ease
   rafId = requestAnimationFrame(animateRing)
@@ -71,7 +71,7 @@ const animateRing = () => {
 const checkEnableStatus = () => {
   const isMobile = window.matchMedia('(max-width: 768px)').matches
   const isAdmin = route && (route.path.includes('/admin') || route.meta.isAdmin || !!document.querySelector('.admin-wrapper'))
-  
+
   if (!isMobile && !isAdmin) {
     if (!enabled.value) {
       enabled.value = true
@@ -92,7 +92,6 @@ const checkEnableStatus = () => {
 }
 
 watch(() => route.path, () => {
-  // Let the DOM update, then check if we should enable the cursor
   setTimeout(checkEnableStatus, 100)
 })
 
@@ -116,35 +115,41 @@ onUnmounted(() => {
   z-index: 999999;
 }
 
+/* Small solid dot — navy */
 .cursor-dot {
   position: fixed;
-  width: 6px;
-  height: 6px;
-  background-color: var(--accent);
+  width: 5px;
+  height: 5px;
+  background-color: var(--accent-navy);
   border-radius: 50%;
   transform: translate(-50%, -50%);
   pointer-events: none;
   z-index: 1000000;
 }
 
+/* Lagging ring — thin navy circle */
 .cursor-ring {
   position: fixed;
-  width: 28px;
-  height: 28px;
-  border: 1px solid var(--accent);
+  width: 24px;
+  height: 24px;
+  border: 1.5px solid var(--accent-navy);
   border-radius: 50%;
+  opacity: 0.65;
   transform: translate(-50%, -50%);
   pointer-events: none;
   z-index: 999999;
-  transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1), 
-              height 0.3s cubic-bezier(0.16, 1, 0.3, 1), 
-              background-color 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  transition:
+    width 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+    height 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 0.35s ease;
 }
 
+/* Expand to bronze ring on hover over interactive elements */
 .cursor-ring.hovering {
-  width: 44px;
-  height: 44px;
-  background-color: rgba(59, 130, 246, 0.08);
-  border-color: var(--accent);
+  width: 38px;
+  height: 38px;
+  border-color: var(--accent-bronze);
+  opacity: 0.55;
 }
 </style>

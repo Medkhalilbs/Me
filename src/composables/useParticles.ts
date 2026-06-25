@@ -5,6 +5,7 @@ interface Particle {
   vx: number; vy: number
   size: number; opacity: number
   life: number; maxLife: number
+  color: string
 }
 
 export function useParticles(canvasId: string) {
@@ -13,9 +14,13 @@ export function useParticles(canvasId: string) {
   let rafId: number
   const particles: Particle[] = []
 
+  let targetOffsetX = 0
+  let targetOffsetY = 0
+  let currentOffsetX = 0
+  let currentOffsetY = 0
+
   function resize() {
     if (!canvas) return
-    // BUG FIX: use parentElement dimensions so canvas fills its container correctly
     const parent = canvas.parentElement
     if (parent) {
       canvas.width = parent.offsetWidth
@@ -32,21 +37,34 @@ export function useParticles(canvasId: string) {
     return {
       x: Math.random() * w,
       y: Math.random() * h,
-      vx: (Math.random() - 0.5) * 0.4,
-      vy: (Math.random() - 0.5) * 0.4,
-      size: Math.random() * 2 + 0.5,
-      opacity: Math.random() * 0.6 + 0.1,
+      vx: (Math.random() - 0.5) * 0.28,
+      vy: (Math.random() - 0.5) * 0.28,
+      size: Math.random() * 1.8 + 0.4,
+      opacity: Math.random() * 0.45 + 0.1,
       life: 0,
-      maxLife: 200 + Math.random() * 300,
+      maxLife: 280 + Math.random() * 280,
+      color: 'navy'
     }
+  }
+
+  function onMouseMove(e: MouseEvent) {
+    const cx = window.innerWidth / 2
+    const cy = window.innerHeight / 2
+    // Subtle 10px parallax
+    targetOffsetX = (e.clientX - cx) * 0.035
+    targetOffsetY = (e.clientY - cy) * 0.035
   }
 
   function draw() {
     if (!ctx || !canvas) return
     ctx.clearRect(0, 0, canvas.width, canvas.height)
 
-    // Maintain ~60 particles
-    while (particles.length < 60) particles.push(spawn())
+    // Smooth parallax easing
+    currentOffsetX += (targetOffsetX - currentOffsetX) * 0.07
+    currentOffsetY += (targetOffsetY - currentOffsetY) * 0.07
+
+    // Maintain 70 particles (60 navy + ~10 bronze)
+    while (particles.length < 70) particles.push(spawn())
 
     for (let i = particles.length - 1; i >= 0; i--) {
       const p = particles[i]
@@ -54,26 +72,42 @@ export function useParticles(canvasId: string) {
       p.x += p.vx
       p.y += p.vy
 
-      const fade = p.life < 30 ? p.life / 30 : p.life > p.maxLife - 30 ? (p.maxLife - p.life) / 30 : 1
-      ctx.beginPath()
-      ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2)
-      ctx.fillStyle = `rgba(59, 130, 246, ${p.opacity * fade})`
-      ctx.fill()
+      // Wrap edges
+      if (p.x < 0) p.x = canvas.width
+      if (p.x > canvas.width) p.x = 0
+      if (p.y < 0) p.y = canvas.height
+      if (p.y > canvas.height) p.y = 0
 
+      const fade = p.life < 40 ? p.life / 40 : p.life > p.maxLife - 40 ? (p.maxLife - p.life) / 40 : 1
+      const renderX = p.x + currentOffsetX
+      const renderY = p.y + currentOffsetY
+
+      ctx.beginPath()
+      ctx.arc(renderX, renderY, p.size, 0, Math.PI * 2)
+
+      ctx.fillStyle = `rgba(74, 125, 191, ${p.opacity * fade})`
+
+      ctx.fill()
       if (p.life >= p.maxLife) particles.splice(i, 1)
     }
 
-    // Draw connections
+    // Low-opacity connection lines between nearby particles
     for (let i = 0; i < particles.length; i++) {
       for (let j = i + 1; j < particles.length; j++) {
         const dx = particles[i].x - particles[j].x
         const dy = particles[i].y - particles[j].y
         const dist = Math.sqrt(dx * dx + dy * dy)
-        if (dist < 120) {
+        if (dist < 110) {
+          const renderXi = particles[i].x + currentOffsetX
+          const renderYi = particles[i].y + currentOffsetY
+          const renderXj = particles[j].x + currentOffsetX
+          const renderYj = particles[j].y + currentOffsetY
+
           ctx.beginPath()
-          ctx.moveTo(particles[i].x, particles[i].y)
-          ctx.lineTo(particles[j].x, particles[j].y)
-          ctx.strokeStyle = `rgba(59, 130, 246, ${0.15 * (1 - dist / 120)})`
+          ctx.moveTo(renderXi, renderYi)
+          ctx.lineTo(renderXj, renderYj)
+          // Very low opacity connections — restrained
+          ctx.strokeStyle = `rgba(74, 125, 191, ${0.07 * (1 - dist / 110)})`
           ctx.lineWidth = 0.5
           ctx.stroke()
         }
@@ -89,10 +123,9 @@ export function useParticles(canvasId: string) {
     ctx = canvas.getContext('2d')
     resize()
     window.addEventListener('resize', resize)
-    // BUG FIX: re-resize after full layout paint to get correct parent dimensions
+    window.addEventListener('mousemove', onMouseMove)
     setTimeout(() => {
       resize()
-      // Refill particles for new dimensions
       particles.length = 0
     }, 200)
     draw()
@@ -101,5 +134,6 @@ export function useParticles(canvasId: string) {
   onUnmounted(() => {
     cancelAnimationFrame(rafId)
     window.removeEventListener('resize', resize)
+    window.removeEventListener('mousemove', onMouseMove)
   })
 }
