@@ -1,6 +1,37 @@
 import { Router } from 'express'
+import multer from 'multer'
+import path from 'path'
+import fs from 'fs'
+import { fileURLToPath } from 'url'
 import { getDb, saveDb } from '../db.js'
 import { requireAuth } from './auth.js'
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+const PROJECT_IMG_DIR = path.resolve(__dirname, '../../data/images/projects')
+
+if (!fs.existsSync(PROJECT_IMG_DIR)) {
+  fs.mkdirSync(PROJECT_IMG_DIR, { recursive: true })
+}
+
+const projectStorage = multer.diskStorage({
+  destination: (_req, _file, cb) => cb(null, PROJECT_IMG_DIR),
+  filename: (_req, file, cb) => {
+    const ext = path.extname(file.originalname)
+    cb(null, `project_${Date.now()}${ext}`)
+  },
+})
+
+const projectUpload = multer({
+  storage: projectStorage,
+  fileFilter: (_req, file, cb) => {
+    if (['image/jpeg', 'image/png', 'image/webp', 'image/avif'].includes(file.mimetype)) {
+      cb(null, true)
+    } else {
+      cb(new Error('Only JPEG, PNG, WebP, AVIF allowed'))
+    }
+  },
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+})
 
 const router = Router()
 
@@ -96,9 +127,65 @@ router.patch('/:id', requireAuth, async (req, res) => {
   res.json({ ok: true })
 })
 
+// POST /api/projects/:id/upload-image — admin
+router.post('/:id/upload-image', requireAuth, projectUpload.single('image'), async (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'No image file uploaded' })
+
+  const { id } = req.params
+  const db = await getDb()
+
+  // Delete old image if exists
+  const existing = db.exec(`SELECT hero_image_path FROM projects WHERE id = ?`, [id])
+  if (existing[0]?.values[0]?.[0]) {
+    const oldFilename = existing[0].values[0][0] as string
+    if (oldFilename) {
+      const oldPath = path.join(PROJECT_IMG_DIR, oldFilename)
+      if (fs.existsSync(oldPath)) {
+        try { fs.unlinkSync(oldPath) } catch (_) {}
+      }
+    }
+  }
+
+  db.run(`UPDATE projects SET hero_image_path = ? WHERE id = ?`, [req.file.filename, id])
+  saveDb()
+  res.json({ ok: true, path: req.file.filename })
+})
+
+// DELETE /api/projects/:id/image — admin
+router.delete('/:id/image', requireAuth, async (req, res) => {
+  const { id } = req.params
+  const db = await getDb()
+
+  const existing = db.exec(`SELECT hero_image_path FROM projects WHERE id = ?`, [id])
+  if (existing[0]?.values[0]?.[0]) {
+    const filename = existing[0].values[0][0] as string
+    if (filename) {
+      const filePath = path.join(PROJECT_IMG_DIR, filename)
+      if (fs.existsSync(filePath)) {
+        try { fs.unlinkSync(filePath) } catch (_) {}
+      }
+    }
+  }
+
+  db.run(`UPDATE projects SET hero_image_path = '' WHERE id = ?`, [id])
+  saveDb()
+  res.json({ ok: true })
+})
+
 // DELETE /api/projects/:id — admin
 router.delete('/:id', requireAuth, async (req, res) => {
   const db = await getDb()
+  // Also clean up image if exists
+  const existing = db.exec(`SELECT hero_image_path FROM projects WHERE id = ?`, [req.params.id])
+  if (existing[0]?.values[0]?.[0]) {
+    const filename = existing[0].values[0][0] as string
+    if (filename) {
+      const filePath = path.join(PROJECT_IMG_DIR, filename)
+      if (fs.existsSync(filePath)) {
+        try { fs.unlinkSync(filePath) } catch (_) {}
+      }
+    }
+  }
   db.run(`DELETE FROM projects WHERE id = ?`, [req.params.id])
   saveDb()
   res.json({ ok: true })

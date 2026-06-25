@@ -138,6 +138,23 @@
             </div>
           </div>
 
+          <!-- Project Image Upload (only for existing projects) -->
+          <div v-if="editingId" class="form-group section-divider">
+            <label class="form-label">Project Cover Image</label>
+            <div class="project-image-upload-wrapper">
+              <div v-if="form.hero_image_path" class="current-project-image-preview">
+                <img :src="`/api/images/projects/${form.hero_image_path}`" alt="Project Cover Preview" class="admin-project-img" />
+                <button type="button" @click="deleteProjectImage" class="btn btn-outline btn-sm danger">🗑️ Delete Image</button>
+              </div>
+              <div v-else class="upload-placeholder">
+                <input type="file" @change="handleProjectImageUpload" accept="image/*" class="file-input" id="project-upload" style="display:none" />
+                <label for="project-upload" class="btn btn-outline btn-sm">📷 Upload Cover Photo</label>
+                <span class="upload-hint">JPEG, PNG, WebP or AVIF (max 5MB)</span>
+              </div>
+              <div v-if="uploadingImage" class="uploading-spinner">Processing...</div>
+            </div>
+          </div>
+
           <!-- Key Features Section -->
           <div class="form-group section-divider">
             <label class="form-label font-bold flex justify-between items-center">
@@ -179,6 +196,7 @@ const loading = ref(true)
 const saving = ref(false)
 const error = ref('')
 const fetchError = ref('')
+const uploadingImage = ref(false)
 
 const showForm = ref(false)
 const editingId = ref<number | null>(null)
@@ -312,6 +330,47 @@ async function deleteProject(id: number) {
     } finally {
       loading.value = false
     }
+  }
+}
+
+async function handleProjectImageUpload(e: Event) {
+  if (!editingId.value) return
+  const target = e.target as HTMLInputElement
+  const file = target.files?.[0]
+  if (!file) return
+
+  uploadingImage.value = true
+  error.value = ''
+  
+  const formData = new FormData()
+  formData.append('image', file)
+
+  try {
+    const res = await api.post(`/projects/${editingId.value}/upload-image`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    })
+    form.hero_image_path = res.data.path
+  } catch (err: any) {
+    error.value = err.response?.data?.error || 'Cover image upload failed'
+  } finally {
+    uploadingImage.value = false
+  }
+}
+
+async function deleteProjectImage() {
+  if (!editingId.value) return
+  if (!confirm('Are you sure you want to delete the cover image for this project?')) return
+  
+  uploadingImage.value = true
+  error.value = ''
+
+  try {
+    await api.delete(`/projects/${editingId.value}/image`)
+    form.hero_image_path = ''
+  } catch (err: any) {
+    error.value = 'Failed to delete cover image'
+  } finally {
+    uploadingImage.value = false
   }
 }
 
@@ -583,5 +642,47 @@ onMounted(loadProjects)
   cursor: pointer;
   font-weight: 600;
   font-size: 0.88rem;
+}
+
+.project-image-upload-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 1.25rem;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin-top: 0.5rem;
+}
+
+.current-project-image-preview {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.admin-project-img {
+  width: 120px;
+  height: 70px;
+  border-radius: var(--radius-sm);
+  object-fit: cover;
+  border: 1px solid var(--border);
+}
+
+.upload-placeholder {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.upload-hint {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.uploading-spinner {
+  font-size: 0.88rem;
+  color: var(--accent);
+  font-weight: 600;
 }
 </style>

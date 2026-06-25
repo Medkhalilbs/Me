@@ -5,7 +5,7 @@ import api from '@/api'
  * Generic admin CRUD composable.
  * @param endpoint - API endpoint (e.g. '/hero-stats')
  */
-export function useAdminCrud<T extends { id: number }>(endpoint: string) {
+export function useAdminCrud<T extends { id: number }>(endpoint: string, readEndpoint?: string) {
   const items = ref<T[]>([])
   const loading = ref(true)
   const saving = ref(false)
@@ -15,7 +15,7 @@ export function useAdminCrud<T extends { id: number }>(endpoint: string) {
   async function load() {
     loading.value = true
     try {
-      const res = await api.get(endpoint)
+      const res = await api.get(readEndpoint || endpoint)
       items.value = res.data
     } catch (e: any) {
       error.value = e.message

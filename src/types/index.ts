@@ -15,6 +15,7 @@ export interface Profile {
   callout_title: string
   callout_text: string
   admin_secret_path?: string
+  profile_image_path?: string | null
 }
 
 // ─── Hero Stats ───────────────────────────────────────────────────────────────
@@ -128,6 +129,8 @@ export interface Certification {
   description: string
   verified: 0 | 1
   sort_order: number
+  status: string       // 'active' | 'expired' | 'in-progress' | 'retired'
+  is_hidden: 0 | 1
 }
 
 // ─── Testimonial ──────────────────────────────────────────────────────────────
@@ -159,4 +162,22 @@ export interface ContactMessage {
   message: string
   received_at: string
   is_read: 0 | 1
+}
+
+// ─── Language ─────────────────────────────────────────────────────────────────
+export interface Language {
+  id: number
+  name: string
+  code: string
+  proficiency: string  // 'native' | 'fluent' | 'professional' | 'intermediate' | 'basic'
+  sort_order: number
+  is_visible: 0 | 1
+}
+
+// ─── Section Setting ──────────────────────────────────────────────────────────
+export interface SectionSetting {
+  id: number
+  section_key: string
+  is_visible: 0 | 1
+  sort_order: number
 }

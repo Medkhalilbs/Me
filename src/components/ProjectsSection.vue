@@ -27,6 +27,11 @@
           class="card project-card reveal"
           :style="{ animationDelay: `${i * 0.08}s` }"
         >
+          <!-- Project Cover Image -->
+          <div v-if="project.hero_image_path" class="project-image-cover">
+            <img :src="`/api/images/projects/${project.hero_image_path}`" :alt="project.title" class="proj-cover-img" />
+          </div>
+
           <!-- Card Header Info -->
           <div class="proj-card-top">
             <span class="category-badge navy-badge">
@@ -378,5 +383,28 @@ function toggleExpand(id: number) {
     grid-template-columns: 1fr;
     gap: 1.5rem;
   }
+}
+
+.project-image-cover {
+  width: calc(100% + 4rem); /* matches card padding of 2rem */
+  margin-top: -2rem;
+  margin-left: -2rem;
+  margin-right: -2rem;
+  margin-bottom: 1.5rem;
+  height: 200px;
+  overflow: hidden;
+  border-bottom: 1px solid var(--border);
+  position: relative;
+}
+
+.proj-cover-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s var(--transition-slow);
+}
+
+.project-card:hover .proj-cover-img {
+  transform: scale(1.05);
 }
 </style>

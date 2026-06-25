@@ -11,7 +11,8 @@
         <div class="about-left reveal">
           <!-- Profile image card -->
           <div class="profile-image-card">
-            <div class="profile-image-placeholder">
+            <img v-if="profile?.profile_image_path" :src="`/api/images/profile/${profile.profile_image_path}`" alt="Mohamed Khalil" class="about-profile-img" />
+            <div v-else class="profile-image-placeholder">
               <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="var(--accent-navy)" stroke-width="1.5">
                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
                 <circle cx="12" cy="7" r="4"/>
@@ -25,26 +26,7 @@
             <span class="status-text">Available for Remote &amp; International Work</span>
           </div>
 
-          <!-- Segmented Languages bar -->
-          <div class="languages-section">
-            <div class="lang-header">// languages</div>
-            <div class="lang-bar">
-              <div class="lang-segment arabic" style="width: 45%;">
-                <span>AR (Native)</span>
-              </div>
-              <div class="lang-segment french" style="width: 35%;">
-                <span>FR (Fluent)</span>
-              </div>
-              <div class="lang-segment english" style="width: 20%;">
-                <span>EN (Prof.)</span>
-              </div>
-            </div>
-            <div class="lang-labels">
-              <span>Arabic</span>
-              <span>French</span>
-              <span>English</span>
-            </div>
-          </div>
+ 
         </div>
 
         <!-- Right: Bio & fact cards -->
@@ -187,6 +169,12 @@ onUnmounted(() => {
   align-items: center;
   justify-content: center;
   background: linear-gradient(135deg, rgba(74, 125, 191, 0.04), rgba(74, 125, 191, 0.01));
+}
+
+.about-profile-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 /* Available for work badge — muted navy accent */

@@ -23,14 +23,14 @@
               </svg>
             </div>
             
-            <div class="verified-badge">
+            <div v-if="cert.verified === 1" class="verified-badge">
               <span class="lock-icon">🔒</span> Verified Credential
             </div>
           </div>
 
           <!-- Certificate Content -->
           <div class="cert-body">
-            <span class="cert-code-label">Ref: AWS-CCP-2026</span>
+            <span class="cert-code-label">Credential ID: {{ cert.id }}</span>
             <h3 class="cert-title-name">{{ cert.name }}</h3>
             <div class="cert-authority">{{ cert.issuer }}</div>
             <p class="cert-explanation">{{ cert.description }}</p>
@@ -40,10 +40,10 @@
           <div class="cert-footer">
             <div class="cert-signature-block">
               <span class="sig-label">ISSUING ORGANIZATION</span>
-              <span class="sig-value">Amazon Web Services</span>
+              <span class="sig-value">{{ cert.issuer }}</span>
             </div>
-            <div class="cert-status-block">
-              <span class="status-indicator-dot"></span> Active Status
+            <div class="cert-status-block" :class="cert.status || 'active'">
+              <span class="status-indicator-dot"></span> {{ formatStatus(cert.status) }}
             </div>
           </div>
         </div>
@@ -56,13 +56,23 @@
 import type { Certification } from '@/types'
 
 defineProps<{ certifications: Certification[] }>()
+
+function formatStatus(status?: string) {
+  if (!status) return 'Active'
+  if (status === 'in-progress') return 'In Progress'
+  return status.charAt(0).toUpperCase() + status.slice(1)
+}
 </script>
 
 <style scoped>
 .cert-card-wrapper {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 2rem;
   justify-content: center;
-  align-items: center;
+  align-items: start;
+  max-width: 1200px;
+  margin: 0 auto;
   position: relative;
   z-index: 1;
 }
@@ -197,15 +207,36 @@ defineProps<{ certifications: Certification[] }>()
   gap: 0.4rem;
   font-family: var(--font-mono);
   font-size: 0.75rem;
-  color: var(--success);
   font-weight: 600;
+}
+
+.cert-status-block.active {
+  color: var(--success);
+}
+.cert-status-block.active .status-indicator-dot {
+  background-color: var(--success);
+  box-shadow: 0 0 6px var(--success);
+}
+
+.cert-status-block.expired, .cert-status-block.retired {
+  color: var(--danger);
+}
+.cert-status-block.expired .status-indicator-dot, .cert-status-block.retired .status-indicator-dot {
+  background-color: var(--danger);
+  box-shadow: 0 0 6px var(--danger);
+}
+
+.cert-status-block.in-progress {
+  color: var(--warning);
+}
+.cert-status-block.in-progress .status-indicator-dot {
+  background-color: var(--warning);
+  box-shadow: 0 0 6px var(--warning);
 }
 
 .status-indicator-dot {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background-color: var(--success);
-  box-shadow: 0 0 6px var(--success);
 }
 </style>

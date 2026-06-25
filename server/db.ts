@@ -58,9 +58,15 @@ function initSchema(): void {
       callout_title TEXT NOT NULL DEFAULT '',
       callout_text TEXT NOT NULL DEFAULT '',
       admin_password_hash TEXT NOT NULL DEFAULT '',
-      admin_secret_path TEXT NOT NULL DEFAULT 'admin-mkbs-2026'
+      admin_secret_path TEXT NOT NULL DEFAULT 'admin-mkbs-2026',
+      profile_image_path TEXT DEFAULT NULL
     );
   `)
+
+  // Add profile_image_path to existing DBs that don't have it yet
+  try {
+    db.run(`ALTER TABLE profile ADD COLUMN profile_image_path TEXT DEFAULT NULL;`)
+  } catch (_) { /* column already exists */ }
 
   db.run(`
     CREATE TABLE IF NOT EXISTS hero_stats (
@@ -201,9 +207,15 @@ function initSchema(): void {
       issuer TEXT NOT NULL,
       description TEXT NOT NULL DEFAULT '',
       verified INTEGER NOT NULL DEFAULT 1,
-      sort_order INTEGER NOT NULL DEFAULT 0
+      sort_order INTEGER NOT NULL DEFAULT 0,
+      status TEXT NOT NULL DEFAULT 'active',
+      is_hidden INTEGER NOT NULL DEFAULT 0
     );
   `)
+
+  // Add new columns to existing certifications table (no-op if already present)
+  try { db.run(`ALTER TABLE certifications ADD COLUMN status TEXT NOT NULL DEFAULT 'active';`) } catch (_) {}
+  try { db.run(`ALTER TABLE certifications ADD COLUMN is_hidden INTEGER NOT NULL DEFAULT 0;`) } catch (_) {}
 
   db.run(`
     CREATE TABLE IF NOT EXISTS testimonials (
@@ -240,6 +252,28 @@ function initSchema(): void {
     );
   `)
 
+  // ── NEW: Languages table ─────────────────────────────────────────────────
+  db.run(`
+    CREATE TABLE IF NOT EXISTS languages (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      code TEXT NOT NULL DEFAULT '',
+      proficiency TEXT NOT NULL DEFAULT 'intermediate',
+      sort_order INTEGER NOT NULL DEFAULT 0,
+      is_visible INTEGER NOT NULL DEFAULT 1
+    );
+  `)
+
+  // ── NEW: Section settings table ──────────────────────────────────────────
+  db.run(`
+    CREATE TABLE IF NOT EXISTS section_settings (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      section_key TEXT NOT NULL UNIQUE,
+      is_visible INTEGER NOT NULL DEFAULT 1,
+      sort_order INTEGER NOT NULL DEFAULT 0
+    );
+  `)
+
   // Seed or re-seed if the category count or project count does not match the new portfolio specifications
   let count = 0
   let skillCategoryCount = 0
@@ -266,6 +300,55 @@ function initSchema(): void {
     try { db.run(`DELETE FROM sqlite_sequence;`) } catch (err) {}
     seedData()
   }
+
+  // Seed languages if empty (preserve on re-runs)
+  try {
+    const langCount = db.exec(`SELECT COUNT(*) as c FROM languages`)[0]?.values[0][0] as number
+    if (langCount === 0) {
+      seedLanguages()
+    }
+  } catch (_) {}
+
+  // Seed section_settings if empty
+  try {
+    const secCount = db.exec(`SELECT COUNT(*) as c FROM section_settings`)[0]?.values[0][0] as number
+    if (secCount === 0) {
+      seedSectionSettings()
+    }
+  } catch (_) {}
+}
+
+function seedLanguages(): void {
+  const languages = [
+    { name: 'Arabic', code: 'AR', proficiency: 'native', sort_order: 0, is_visible: 1 },
+    { name: 'French', code: 'FR', proficiency: 'fluent', sort_order: 1, is_visible: 1 },
+    { name: 'English', code: 'EN', proficiency: 'professional', sort_order: 2, is_visible: 1 },
+  ]
+  languages.forEach(lang => {
+    db.run(`INSERT INTO languages (name, code, proficiency, sort_order, is_visible) VALUES (?, ?, ?, ?, ?)`,
+      [lang.name, lang.code, lang.proficiency, lang.sort_order, lang.is_visible])
+  })
+  console.log('✅ Languages seeded')
+}
+
+function seedSectionSettings(): void {
+  const sections = [
+    { key: 'hero', sort_order: 0 },
+    { key: 'about', sort_order: 1 },
+    { key: 'languages', sort_order: 2 },
+    { key: 'skills', sort_order: 3 },
+    { key: 'experience', sort_order: 4 },
+    { key: 'projects', sort_order: 5 },
+    { key: 'education', sort_order: 6 },
+    { key: 'tech-stack', sort_order: 7 },
+    { key: 'certifications', sort_order: 8 },
+    { key: 'why-work-with-me', sort_order: 9 },
+    { key: 'contact', sort_order: 10 },
+  ]
+  sections.forEach(s => {
+    db.run(`INSERT INTO section_settings (section_key, is_visible, sort_order) VALUES (?, 1, ?)`, [s.key, s.sort_order])
+  })
+  console.log('✅ Section settings seeded')
 }
 
 function seedData(): void {
@@ -557,8 +640,8 @@ function seedData(): void {
   })
 
   // Certifications
-  db.run(`INSERT INTO certifications (name, issuer, description, verified, sort_order) VALUES (?, ?, ?, ?, ?)`,
-    ['AWS Certified Cloud Practitioner', 'Amazon Web Services', 'Foundational certification demonstrating cloud knowledge across AWS services, security, architecture, and pricing.', 1, 0])
+  db.run(`INSERT INTO certifications (name, issuer, description, verified, sort_order, status, is_hidden) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+    ['AWS Certified Cloud Practitioner', 'Amazon Web Services', 'Foundational certification demonstrating cloud knowledge across AWS services, security, architecture, and pricing.', 1, 0, 'active', 0])
 
   saveDb()
   console.log('✅ Database seeded with new portfolio data')

@@ -5,6 +5,23 @@
 
     <div v-if="loading" class="panel-loading">Loading…</div>
     <form v-else @submit.prevent="save" class="profile-form">
+      <!-- Profile Photo Upload -->
+      <div class="form-section">
+        <h3 class="form-section-title">Profile Photo</h3>
+        <div class="profile-image-upload-wrapper">
+          <div v-if="form.profile_image_path" class="current-profile-preview">
+            <img :src="`/api/images/profile/${form.profile_image_path}`" alt="Profile Preview" class="admin-profile-img" />
+            <button type="button" @click="deleteImage" class="btn btn-outline btn-sm danger">🗑️ Delete Photo</button>
+          </div>
+          <div v-else class="upload-placeholder">
+            <input type="file" @change="handleImageUpload" accept="image/*" class="file-input" id="profile-upload" style="display:none" />
+            <label for="profile-upload" class="btn btn-outline btn-sm">📷 Upload Profile Photo</label>
+            <span class="upload-hint">JPEG, PNG, WebP or AVIF (max 5MB)</span>
+          </div>
+          <div v-if="uploadingImage" class="uploading-spinner">Processing...</div>
+        </div>
+      </div>
+
       <div class="form-section">
         <h3 class="form-section-title">Basic Info</h3>
         <div class="form-row">
@@ -96,6 +113,7 @@ const loading = ref(true)
 const saving = ref(false)
 const saved = ref(false)
 const error = ref('')
+const uploadingImage = ref(false)
 
 const form = reactive({
   name: '', title: '', location: '', email: '', phone: '',
@@ -103,6 +121,7 @@ const form = reactive({
   hero_heading: '', hero_subtitle: '', hero_badge: '',
   about_paragraphs: [] as string[],
   callout_title: '', callout_text: '',
+  profile_image_path: null as string | null
 })
 
 onMounted(async () => {
@@ -120,13 +139,56 @@ async function save() {
   saved.value = false
   error.value = ''
   try {
-    await api.patch('/profile', { ...form })
+    const payload = { ...form }
+    // Clean up fields not allowed or not needed by API
+    delete (payload as any).id
+    delete (payload as any).profile_image_path
+    await api.patch('/profile', payload)
     saved.value = true
     setTimeout(() => { saved.value = false }, 3000)
   } catch (e: any) {
     error.value = e.response?.data?.error || 'Save failed'
   } finally {
     saving.value = false
+  }
+}
+
+async function handleImageUpload(e: Event) {
+  const target = e.target as HTMLInputElement
+  const file = target.files?.[0]
+  if (!file) return
+
+  uploadingImage.value = true
+  error.value = ''
+  
+  const formData = new FormData()
+  formData.append('image', file)
+
+  try {
+    const res = await api.post('/profile/upload-image', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    })
+    form.profile_image_path = res.data.path
+  } catch (err: any) {
+    error.value = err.response?.data?.error || 'Image upload failed'
+  } finally {
+    uploadingImage.value = false
+  }
+}
+
+async function deleteImage() {
+  if (!confirm('Are you sure you want to delete your profile photo?')) return
+  
+  uploadingImage.value = true
+  error.value = ''
+
+  try {
+    await api.delete('/profile/image')
+    form.profile_image_path = null
+  } catch (err: any) {
+    error.value = 'Failed to delete photo'
+  } finally {
+    uploadingImage.value = false
   }
 }
 </script>
@@ -163,4 +225,57 @@ async function save() {
 .panel-actions { display: flex; align-items: center; gap: 1rem; margin-top: 1.5rem; }
 .saved-msg { color: var(--success); font-size: 0.88rem; }
 .error-msg { color: var(--danger); font-size: 0.88rem; }
+
+.profile-image-upload-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 1.25rem;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: 1.5rem;
+}
+
+.current-profile-preview {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.admin-profile-img {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--accent);
+}
+
+.upload-placeholder {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.upload-hint {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.uploading-spinner {
+  font-size: 0.88rem;
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.btn-sm {
+  padding: 0.4rem 1rem;
+  font-size: 0.8rem;
+}
+
+.btn.danger:hover {
+  border-color: var(--danger);
+  color: var(--danger);
+  background: rgba(239, 68, 68, 0.1);
+}
 </style>

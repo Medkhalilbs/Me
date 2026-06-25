@@ -53,6 +53,8 @@
         </Suspense>
       </main>
     </template>
+
+    <ToastContainer />
   </div>
 </template>
 
@@ -63,6 +65,7 @@ import { useAdminStore } from '@/stores/adminStore'
 // Lazy-loaded admin panels
 import AdminProfile       from '@/components/admin/AdminProfile.vue'
 import AdminHeroStats     from '@/components/admin/AdminHeroStats.vue'
+import AdminLanguages     from '@/components/admin/AdminLanguages.vue'
 import AdminSkills        from '@/components/admin/AdminSkills.vue'
 import AdminExperiences   from '@/components/admin/AdminExperiences.vue'
 import AdminProjects      from '@/components/admin/AdminProjects.vue'
@@ -72,7 +75,9 @@ import AdminWhyMe         from '@/components/admin/AdminWhyMe.vue'
 import AdminCertifications from '@/components/admin/AdminCertifications.vue'
 import AdminCVs           from '@/components/admin/AdminCVs.vue'
 import AdminMessages      from '@/components/admin/AdminMessages.vue'
+import AdminSections      from '@/components/admin/AdminSections.vue'
 import AdminSettings      from '@/components/admin/AdminSettings.vue'
+import ToastContainer     from '@/components/ToastContainer.vue'
 
 const adminStore = useAdminStore()
 const password = ref('')
@@ -86,6 +91,7 @@ async function doLogin() {
 const navItems = [
   { id: 'profile',       icon: '👤', label: 'Profile' },
   { id: 'hero-stats',    icon: '📊', label: 'Hero Stats' },
+  { id: 'languages',     icon: '🗣️', label: 'Languages' },
   { id: 'skills',        icon: '⚡', label: 'Skills' },
   { id: 'experiences',   icon: '💼', label: 'Experience' },
   { id: 'projects',      icon: '🚀', label: 'Projects' },
@@ -95,12 +101,14 @@ const navItems = [
   { id: 'certifications',icon: '🏆', label: 'Certifications' },
   { id: 'cvs',           icon: '📄', label: 'CVs' },
   { id: 'messages',      icon: '📬', label: 'Messages' },
+  { id: 'sections',      icon: '⚙️', label: 'Sections Visibility' },
   { id: 'settings',      icon: '⚙️', label: 'Settings' },
 ]
 
 const panelMap: Record<string, unknown> = {
   'profile':        AdminProfile,
   'hero-stats':     AdminHeroStats,
+  'languages':      AdminLanguages,
   'skills':         AdminSkills,
   'experiences':    AdminExperiences,
   'projects':       AdminProjects,
@@ -110,6 +118,7 @@ const panelMap: Record<string, unknown> = {
   'certifications': AdminCertifications,
   'cvs':            AdminCVs,
   'messages':       AdminMessages,
+  'sections':       AdminSections,
   'settings':       AdminSettings,
 }
 

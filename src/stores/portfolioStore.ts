@@ -4,7 +4,7 @@ import api from '@/api'
 import type {
   Profile, HeroStat, SkillCategory, Experience,
   Project, Education, TechStackItem, WhyCard,
-  Certification, Testimonial, CV
+  Certification, Testimonial, CV, Language, SectionSetting
 } from '@/types'
 
 export const usePortfolioStore = defineStore('portfolio', () => {
@@ -19,6 +19,8 @@ export const usePortfolioStore = defineStore('portfolio', () => {
   const certifications = ref<Certification[]>([])
   const testimonials = ref<Testimonial[]>([])
   const cvs = ref<CV[]>([])
+  const languages = ref<Language[]>([])
+  const sectionSettings = ref<SectionSetting[]>([])
   const loading = ref(false)
   const error = ref<string | null>(null)
 
@@ -28,7 +30,8 @@ export const usePortfolioStore = defineStore('portfolio', () => {
     try {
       const [
         profileRes, statsRes, skillsRes, expRes, projRes,
-        eduRes, techRes, whyRes, certRes, testRes, cvsRes
+        eduRes, techRes, whyRes, certRes, testRes, cvsRes,
+        langRes, sectRes
       ] = await Promise.all([
         api.get('/profile'),
         api.get('/hero-stats'),
@@ -41,6 +44,8 @@ export const usePortfolioStore = defineStore('portfolio', () => {
         api.get('/certifications'),
         api.get('/testimonials'),
         api.get('/cvs'),
+        api.get('/languages'),
+        api.get('/sections'),
       ])
 
       profile.value = profileRes.data
@@ -54,6 +59,8 @@ export const usePortfolioStore = defineStore('portfolio', () => {
       certifications.value = certRes.data
       testimonials.value = testRes.data
       cvs.value = cvsRes.data
+      languages.value = langRes.data
+      sectionSettings.value = sectRes.data
     } catch (e: any) {
       error.value = e.message
       console.error('Failed to load portfolio data:', e)
@@ -62,9 +69,17 @@ export const usePortfolioStore = defineStore('portfolio', () => {
     }
   }
 
+  function isSectionVisible(key: string): boolean {
+    if (!sectionSettings.value.length) return true // default visible until loaded
+    const s = sectionSettings.value.find(s => s.section_key === key)
+    return s ? s.is_visible === 1 : true
+  }
+
   return {
     profile, heroStats, skills, experiences, projects,
     education, techStack, whyCards, certifications, testimonials, cvs,
-    loading, error, fetchAll
+    languages, sectionSettings,
+    loading, error,
+    fetchAll, isSectionVisible
   }
 })

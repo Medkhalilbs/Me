@@ -22,10 +22,18 @@
       <div v-for="cert in items" :key="cert.id" class="card cert-card">
         <div class="cert-body">
           <div class="cert-header">
-            <h4 class="cert-title-text">{{ cert.name }}</h4>
-            <span class="cert-badge" :class="cert.verified ? 'verified' : 'unverified'">
-              {{ cert.verified ? '✓ Verified' : 'Unverified' }}
-            </span>
+            <div class="cert-title-wrapper">
+              <h4 class="cert-title-text">{{ cert.name }}</h4>
+              <span v-if="cert.is_hidden === 1" class="status-badge hidden-badge" style="margin-left: 0.5rem;">👁️ Hidden</span>
+            </div>
+            <div class="badge-row">
+              <span class="cert-badge" :class="cert.verified ? 'verified' : 'unverified'">
+                {{ cert.verified ? '✓ Verified' : 'Unverified' }}
+              </span>
+              <span class="status-badge" :class="cert.status || 'active'">
+                {{ cert.status || 'active' }}
+              </span>
+            </div>
           </div>
           <div class="cert-issuer">Issued by: <strong>{{ cert.issuer }}</strong></div>
           <p v-if="cert.description" class="cert-desc">{{ cert.description }}</p>
@@ -66,14 +74,31 @@
           </div>
 
           <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Status</label>
+              <select v-model="form.status" class="form-input select-input" style="background-color: var(--bg-secondary);">
+                <option value="active">Active</option>
+                <option value="expired">Expired</option>
+                <option value="retired">Retired</option>
+                <option value="in-progress">In Progress</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Sort Order</label>
+              <input v-model.number="form.sort_order" type="number" class="form-input" />
+            </div>
+          </div>
+
+          <div class="form-row" style="margin-top: 0.5rem;">
             <div class="form-group check-group">
               <label class="checkbox-label">
                 <input type="checkbox" v-model="form.verified" /> Verified Certification
               </label>
             </div>
-            <div class="form-group">
-              <label class="form-label">Sort Order</label>
-              <input v-model.number="form.sort_order" type="number" class="form-input" />
+            <div class="form-group check-group">
+              <label class="checkbox-label">
+                <input type="checkbox" v-model="form.is_hidden" /> Hide from portfolio
+              </label>
             </div>
           </div>
 
@@ -94,7 +119,7 @@ import { ref, reactive } from 'vue'
 import { useAdminCrud } from '@/composables/useAdminCrud'
 import type { Certification } from '@/types'
 
-const { items, loading, saving, error, load, create, update, remove } = useAdminCrud<Certification>('/certifications')
+const { items, loading, saving, error, load, create, update, remove } = useAdminCrud<Certification>('/certifications', '/certifications/admin')
 
 const showCreateForm = ref(false)
 const editingCertId = ref<number | null>(null)
@@ -105,6 +130,8 @@ const form = reactive({
   description: '',
   verified: true,
   sort_order: 0,
+  status: 'active',
+  is_hidden: false,
 })
 
 function resetForm() {
@@ -113,6 +140,8 @@ function resetForm() {
   form.description = ''
   form.verified = true
   form.sort_order = items.value.length ? Math.max(...items.value.map(c => c.sort_order)) + 10 : 10
+  form.status = 'active'
+  form.is_hidden = false
 }
 
 function editCert(cert: Certification) {
@@ -122,6 +151,8 @@ function editCert(cert: Certification) {
   form.description = cert.description
   form.verified = cert.verified === 1
   form.sort_order = cert.sort_order
+  form.status = cert.status || 'active'
+  form.is_hidden = cert.is_hidden === 1
 }
 
 function closeForm() {
@@ -137,6 +168,8 @@ async function submitForm() {
     description: form.description,
     verified: form.verified ? 1 : 0,
     sort_order: form.sort_order,
+    status: form.status,
+    is_hidden: form.is_hidden ? 1 : 0,
   }
 
   if (editingCertId.value) {
@@ -199,6 +232,55 @@ async function deleteCert(id: number) {
   align-items: flex-start;
   gap: 0.5rem;
   margin-bottom: 0.5rem;
+}
+
+.cert-title-wrapper {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.badge-row {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.35rem;
+}
+
+.status-badge {
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+
+.status-badge.active {
+  background: rgba(16, 185, 129, 0.15);
+  color: var(--success);
+}
+
+.status-badge.expired, .status-badge.retired {
+  background: rgba(239, 68, 68, 0.15);
+  color: var(--danger);
+}
+
+.status-badge.in-progress {
+  background: rgba(245, 158, 11, 0.15);
+  color: var(--warning);
+}
+
+.hidden-badge {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-secondary);
+}
+
+.select-input {
+  appearance: none;
+  background-image: url("data:image/svg+xml;utf8,<svg fill='white' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/><path d='M0 0h24v24H0z' fill='none'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  padding-right: 30px;
 }
 
 .cert-title-text {

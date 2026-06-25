@@ -10,26 +10,50 @@
     <CommandPalette :open="commandOpen" @close="commandOpen = false" />
 
     <main v-if="!store.loading">
-      <HeroSection        :profile="store.profile" :hero-stats="store.heroStats" :cvs="store.cvs" />
-      <SectionDivider />
-      <AboutSection       :profile="store.profile" />
-      <SectionDivider />
-      <SkillsSection      :skills="store.skills" />
-      <SectionDivider />
-      <ExperienceSection  :experiences="store.experiences" />
-      <SectionDivider />
-      <ProjectsSection    :projects="store.projects" />
-      <SectionDivider />
-      <EducationSection   :education="store.education" />
-      <SectionDivider />
-      <TechStackSection   :tech-stack="store.techStack" />
-      <SectionDivider />
-      <CertificationsSection :certifications="store.certifications" />
-      <SectionDivider />
-      <WhyWorkWithMe      :why-cards="store.whyCards" />
-      <SectionDivider />
-      <ContactSection     :profile="store.profile" />
-      <FooterComponent    :profile="store.profile" />
+      <template v-if="store.isSectionVisible('hero')">
+        <HeroSection :profile="store.profile" :hero-stats="store.heroStats" :cvs="store.cvs" />
+        <SectionDivider />
+      </template>
+      <template v-if="store.isSectionVisible('about')">
+        <AboutSection :profile="store.profile" />
+        <SectionDivider />
+      </template>
+      <template v-if="store.isSectionVisible('languages')">
+        <LanguagesSection :languages="store.languages" />
+        <SectionDivider />
+      </template>
+      <template v-if="store.isSectionVisible('skills')">
+        <SkillsSection :skills="store.skills" />
+        <SectionDivider />
+      </template>
+      <template v-if="store.isSectionVisible('experience')">
+        <ExperienceSection :experiences="store.experiences" />
+        <SectionDivider />
+      </template>
+      <template v-if="store.isSectionVisible('projects')">
+        <ProjectsSection :projects="store.projects" />
+        <SectionDivider />
+      </template>
+      <template v-if="store.isSectionVisible('education')">
+        <EducationSection :education="store.education" />
+        <SectionDivider />
+      </template>
+      <template v-if="store.isSectionVisible('tech-stack')">
+        <TechStackSection :tech-stack="store.techStack" />
+        <SectionDivider />
+      </template>
+      <template v-if="store.isSectionVisible('certifications')">
+        <CertificationsSection :certifications="store.certifications" />
+        <SectionDivider />
+      </template>
+      <template v-if="store.isSectionVisible('why-work-with-me')">
+        <WhyWorkWithMe :why-cards="store.whyCards" />
+        <SectionDivider />
+      </template>
+      <template v-if="store.isSectionVisible('contact')">
+        <ContactSection :profile="store.profile" />
+      </template>
+      <FooterComponent :profile="store.profile" />
     </main>
 
     <!-- Loading state -->
@@ -46,6 +70,8 @@
     <Transition name="fade">
       <button v-if="scrollY > 300" class="back-to-top" @click="scrollToTop">↑</button>
     </Transition>
+
+    <ToastContainer />
   </div>
 </template>
 
@@ -60,6 +86,7 @@ import Navbar from '@/components/Navbar.vue'
 import CommandPalette from '@/components/CommandPalette.vue'
 import HeroSection from '@/components/HeroSection.vue'
 import AboutSection from '@/components/AboutSection.vue'
+import LanguagesSection from '@/components/LanguagesSection.vue'
 import SkillsSection from '@/components/SkillsSection.vue'
 import ExperienceSection from '@/components/ExperienceSection.vue'
 import ProjectsSection from '@/components/ProjectsSection.vue'
@@ -70,6 +97,7 @@ import WhyWorkWithMe from '@/components/WhyWorkWithMe.vue'
 import ContactSection from '@/components/ContactSection.vue'
 import FooterComponent from '@/components/FooterComponent.vue'
 import SectionDivider from '@/components/SectionDivider.vue'
+import ToastContainer from '@/components/ToastContainer.vue'
 
 const store = usePortfolioStore()
 const { theme, toggle: toggleTheme } = useTheme()

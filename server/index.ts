@@ -16,6 +16,8 @@ import certificationsRouter from './routes/certifications.js'
 import testimonialsRouter from './routes/testimonials.js'
 import contactRouter from './routes/contactMessages.js'
 import cvsRouter from './routes/cvs.js'
+import languagesRouter from './routes/languages.js'
+import sectionsRouter from './routes/sections.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const app = express()
@@ -40,9 +42,14 @@ app.use('/api/certifications', certificationsRouter)
 app.use('/api/testimonials', testimonialsRouter)
 app.use('/api/contact', contactRouter)
 app.use('/api/cvs', cvsRouter)
+app.use('/api/languages', languagesRouter)
+app.use('/api/sections', sectionsRouter)
 
-// Static data directory
+// Static data directory (existing)
 app.use('/data', express.static(path.resolve(__dirname, '../data')))
+
+// Static images directory for profile & project uploads
+app.use('/api/images', express.static(path.resolve(__dirname, '../data/images')))
 
 // Health check
 app.get('/api/health', (_req, res) => res.json({ status: 'ok', ts: Date.now() }))
