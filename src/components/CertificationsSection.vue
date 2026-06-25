@@ -1,5 +1,5 @@
 <template>
-  <section id="certifications" class="section" style="background: var(--bg-secondary);">
+  <section id="certifications" class="section">
     <div class="section-number"></div>
     <div class="container">
       <div class="section-badge reveal">// 07 — CERTIFICATIONS</div>

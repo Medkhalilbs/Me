@@ -61,6 +61,10 @@ export const usePortfolioStore = defineStore('portfolio', () => {
       cvs.value = cvsRes.data
       languages.value = langRes.data
       sectionSettings.value = sectRes.data
+
+      if (profile.value) {
+        document.title = `${profile.value.name} — ${profile.value.title}`
+      }
     } catch (e: any) {
       error.value = e.message
       console.error('Failed to load portfolio data:', e)

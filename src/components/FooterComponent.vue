@@ -8,9 +8,9 @@
         <!-- Logo and tagline -->
         <div class="footer-brand">
           <span class="logo-text">
-            MK<span class="bs-accent">BS</span>
+            {{ logoInitials.first }}<span class="bs-accent">{{ logoInitials.second }}</span>
           </span>
-          <span class="footer-tagline">Silicon to Cloud Systems</span>
+          <span class="footer-tagline">{{ profile?.title || 'From Silicon to Cloud' }}</span>
         </div>
 
         <!-- Quick Links -->
@@ -37,7 +37,7 @@
       <!-- Bottom Copyright line -->
       <div class="footer-bottom-row">
         <span class="copyright-text">
-          &copy; 2026 Mohamed Khalil Ben Sedrine. Built with Vue 3 &amp; precision.
+          &copy; {{ new Date().getFullYear() }} {{ profile?.name || 'Mohamed Khalil Ben Sedrine' }}. Built with Vue 3 &amp; precision.
         </span>
       </div>
     </div>
@@ -45,9 +45,32 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
 import type { Profile } from '@/types'
 
-defineProps<{ profile: Profile | null }>()
+const props = defineProps<{ profile: Profile | null }>()
+
+const logoInitials = computed(() => {
+  const name = props.profile?.name || 'Mohamed Khalil Ben Sedrine'
+  const parts = name.trim().split(/\s+/)
+  if (parts.length >= 4) {
+    return {
+      first: (parts[0]?.[0] || '') + (parts[1]?.[0] || ''),
+      second: (parts[2]?.[0] || '') + (parts[3]?.[0] || '')
+    }
+  } else if (parts.length === 3) {
+    return {
+      first: (parts[0]?.[0] || '') + (parts[1]?.[0] || ''),
+      second: parts[2]?.[0] || ''
+    }
+  } else if (parts.length === 2) {
+    return {
+      first: parts[0]?.[0] || '',
+      second: parts[1]?.[0] || ''
+    }
+  }
+  return { first: 'MK', second: 'BS' }
+})
 
 const navLinks = [
   { href: '#hero',       label: 'Home' },

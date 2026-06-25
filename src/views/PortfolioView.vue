@@ -6,7 +6,7 @@
     <!-- Scroll progress bar -->
     <div id="scroll-progress" :style="{ width: scrollPct + '%' }"></div>
 
-    <Navbar :theme="theme" @toggle-theme="toggleTheme" @open-command="commandOpen = true" />
+    <Navbar :theme="theme" :profile="store.profile" @toggle-theme="toggleTheme" @open-command="commandOpen = true" />
     <CommandPalette :open="commandOpen" @close="commandOpen = false" />
 
     <main v-if="!store.loading">
@@ -15,11 +15,7 @@
         <SectionDivider />
       </template>
       <template v-if="store.isSectionVisible('about')">
-        <AboutSection :profile="store.profile" />
-        <SectionDivider />
-      </template>
-      <template v-if="store.isSectionVisible('languages')">
-        <LanguagesSection :languages="store.languages" />
+        <AboutSection :profile="store.profile" :languages="store.languages" />
         <SectionDivider />
       </template>
       <template v-if="store.isSectionVisible('skills')">
@@ -63,7 +59,7 @@
 
     <!-- Error -->
     <div v-if="store.error" class="error-banner">
-      ⚠️ Could not reach the API server. Make sure <code>npm run server</code> is running on port 3001.
+      ⚠️ Could not reach the API server. Make sure <code>npm run server</code> is running.
     </div>
 
     <!-- Back to top -->
@@ -86,7 +82,6 @@ import Navbar from '@/components/Navbar.vue'
 import CommandPalette from '@/components/CommandPalette.vue'
 import HeroSection from '@/components/HeroSection.vue'
 import AboutSection from '@/components/AboutSection.vue'
-import LanguagesSection from '@/components/LanguagesSection.vue'
 import SkillsSection from '@/components/SkillsSection.vue'
 import ExperienceSection from '@/components/ExperienceSection.vue'
 import ProjectsSection from '@/components/ProjectsSection.vue'

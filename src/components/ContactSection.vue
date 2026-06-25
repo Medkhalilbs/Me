@@ -30,7 +30,7 @@
               </div>
               <div>
                 <div class="contact-link-label">LinkedIn</div>
-                <div class="contact-link-value">linkedin.com/in/mk-bs</div>
+                <div class="contact-link-value">{{ cleanLinkedinLabel }}</div>
               </div>
             </a>
             <a :href="profile?.github_url || 'https://github.com/Medkhalilbs'" target="_blank" rel="noopener" class="contact-link navy-hover">
@@ -39,7 +39,7 @@
               </div>
               <div>
                 <div class="contact-link-label">GitHub</div>
-                <div class="contact-link-value">github.com/Medkhalilbs</div>
+                <div class="contact-link-value">{{ cleanGithubLabel }}</div>
               </div>
             </a>
           </div>
@@ -80,11 +80,21 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue'
+import { ref, reactive, computed } from 'vue'
 import api from '@/api'
 import type { Profile } from '@/types'
 
-defineProps<{ profile: Profile | null }>()
+const props = defineProps<{ profile: Profile | null }>()
+
+const cleanLinkedinLabel = computed(() => {
+  if (!props.profile?.linkedin_url) return 'linkedin.com/in/mk-bs'
+  return props.profile.linkedin_url.replace(/^https?:\/\/(www\.)?/, '')
+})
+
+const cleanGithubLabel = computed(() => {
+  if (!props.profile?.github_url) return 'github.com/Medkhalilbs'
+  return props.profile.github_url.replace(/^https?:\/\/(www\.)?/, '')
+})
 
 const form = reactive({ name: '', email: '', subject: '', message: '' })
 const loading = ref(false)

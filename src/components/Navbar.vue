@@ -4,7 +4,7 @@
       <!-- Logo: MK (text-primary) + BS (accent-navy) -->
       <a href="#hero" class="logo-wrap">
         <span class="logo-text">
-          MK<span class="bs-accent">BS</span>
+          {{ logoInitials.first }}<span class="bs-accent">{{ logoInitials.second }}</span>
         </span>
       </a>
 
@@ -45,7 +45,7 @@
       <div v-if="mobileOpen" class="mobile-menu-panel bg-glass">
         <div class="mobile-menu-header">
           <span class="logo-text">
-            MK<span class="bs-accent">BS</span>
+            {{ logoInitials.first }}<span class="bs-accent">{{ logoInitials.second }}</span>
           </span>
           <button class="mobile-close" @click="mobileOpen = false">✕</button>
         </div>
@@ -70,10 +70,36 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, computed } from 'vue'
+import type { Profile } from '@/types'
 
-defineProps<{ theme: string }>()
+const props = defineProps<{
+  theme: string
+  profile: Profile | null
+}>()
 defineEmits(['toggle-theme', 'open-command'])
+
+const logoInitials = computed(() => {
+  const name = props.profile?.name || 'Mohamed Khalil Ben Sedrine'
+  const parts = name.trim().split(/\s+/)
+  if (parts.length >= 4) {
+    return {
+      first: (parts[0]?.[0] || '') + (parts[1]?.[0] || ''),
+      second: (parts[2]?.[0] || '') + (parts[3]?.[0] || '')
+    }
+  } else if (parts.length === 3) {
+    return {
+      first: (parts[0]?.[0] || '') + (parts[1]?.[0] || ''),
+      second: parts[2]?.[0] || ''
+    }
+  } else if (parts.length === 2) {
+    return {
+      first: parts[0]?.[0] || '',
+      second: parts[1]?.[0] || ''
+    }
+  }
+  return { first: 'MK', second: 'BS' }
+})
 
 const isScrolled = ref(false)
 const mobileOpen = ref(false)

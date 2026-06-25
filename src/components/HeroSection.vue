@@ -11,18 +11,18 @@
 
       <!-- Large Name — signature gradient on first line -->
       <h1 class="hero-name reveal">
-        <span class="gradient-name gradient-signature-text">Mohamed Khalil</span>
-        <span class="sub-name">Ben Sedrine</span>
+        <span class="gradient-name gradient-signature-text">{{ firstName }}</span>
+        <span class="sub-name">{{ lastName }}</span>
       </h1>
 
       <!-- Role title with blinking cursor -->
       <p class="hero-title reveal">
-        <span>Full Stack Software Engineer // 5 years experience</span><span class="terminal-cursor">_</span>
+        <span>{{ profile?.title || 'Full Stack Software Engineer // 5 years experience' }}</span><span class="terminal-cursor">_</span>
       </p>
 
       <!-- Tagline -->
       <p class="hero-subtitle reveal">
-        From embedded systems to cloud architecture — building software at every layer.
+        {{ profile?.hero_subtitle || 'From embedded systems to cloud architecture — building software at every layer.' }}
       </p>
 
       <!-- CTA buttons -->
@@ -90,6 +90,24 @@ const props = defineProps<{
 }>()
 
 const defaultCv = computed(() => props.cvs.find(c => c.is_default) || props.cvs[0] || null)
+
+const firstName = computed(() => {
+  if (!props.profile?.name) return 'Mohamed Khalil'
+  const parts = props.profile.name.trim().split(/\s+/)
+  if (parts.length > 2) {
+    return parts.slice(0, 2).join(' ')
+  }
+  return parts[0] || 'Mohamed Khalil'
+})
+
+const lastName = computed(() => {
+  if (!props.profile?.name) return 'Ben Sedrine'
+  const parts = props.profile.name.trim().split(/\s+/)
+  if (parts.length > 2) {
+    return parts.slice(2).join(' ')
+  }
+  return parts.slice(1).join(' ') || 'Ben Sedrine'
+})
 
 useParticles('particles-canvas')
 useMouseGlow()

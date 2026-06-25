@@ -15,7 +15,7 @@
   width: 100%;
   max-width: var(--container-max);
   margin: 0 auto;
-  padding: 1.5rem 2rem;
+  padding: 0 2rem;
   display: flex;
   align-items: center;
   gap: 0;
