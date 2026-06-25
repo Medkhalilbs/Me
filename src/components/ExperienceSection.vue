@@ -34,9 +34,19 @@
               </div>
 
               <h3 class="exp-role">{{ exp.role }}</h3>
-              <div class="exp-company-row">
-                <span class="exp-company">{{ exp.company }}</span>
-                <span v-if="exp.client" class="exp-client-label">// Client: {{ exp.client }}</span>
+              <!-- Employer / Client affiliation line -->
+              <div class="exp-affiliation">
+                <span class="exp-employer-chip">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
+                  {{ exp.company }}
+                </span>
+                <template v-if="exp.client">
+                  <span class="exp-affiliation-arrow">→</span>
+                  <span class="exp-client-chip">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                    {{ exp.client }}
+                  </span>
+                </template>
               </div>
 
               <div class="exp-meta-row">
@@ -149,24 +159,45 @@ defineProps<{ experiences: Experience[] }>()
   margin: 0 0 0.25rem;
 }
 
-.exp-company-row {
+/* Affiliation line: Employer chip → Client chip */
+.exp-affiliation {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
-  gap: 0.75rem;
-  margin-bottom: 0.5rem;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
 }
 
-.exp-company {
-  font-size: 1rem;
-  font-weight: 600;
-  color: var(--text-primary);
-}
-
-.exp-client-label {
-  font-family: var(--font-mono);
+.exp-employer-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
   font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  padding: 0.2rem 0.65rem;
+  border-radius: var(--radius-sm);
+}
+
+.exp-affiliation-arrow {
+  font-size: 0.8rem;
   color: var(--text-muted);
+  opacity: 0.6;
+}
+
+.exp-client-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--accent-navy);
+  background: var(--accent-navy-subtle);
+  border: 1px solid rgba(74, 125, 191, 0.25);
+  padding: 0.2rem 0.65rem;
+  border-radius: var(--radius-sm);
 }
 
 .exp-meta-row {

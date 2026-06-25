@@ -72,12 +72,15 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, computed } from 'vue'
 import type { Profile } from '@/types'
+import { usePortfolioStore } from '@/stores/portfolioStore'
 
 const props = defineProps<{
   theme: string
   profile: Profile | null
 }>()
 defineEmits(['toggle-theme', 'open-command'])
+
+const store = usePortfolioStore()
 
 const logoInitials = computed(() => {
   const name = props.profile?.name || 'Mohamed Khalil Ben Sedrine'
@@ -105,14 +108,18 @@ const isScrolled = ref(false)
 const mobileOpen = ref(false)
 const activeSection = ref('#hero')
 
-const navLinks = [
-  { href: '#hero',       label: 'Home' },
-  { href: '#about',      label: 'About' },
-  { href: '#skills',     label: 'Skills' },
-  { href: '#experience', label: 'Experience' },
-  { href: '#projects',   label: 'Projects' },
-  { href: '#contact',    label: 'Contact' },
+const allLinks = [
+  { href: '#hero',       label: 'Home',       key: 'hero' },
+  { href: '#about',      label: 'About',      key: 'about' },
+  { href: '#skills',     label: 'Skills',     key: 'skills' },
+  { href: '#experience', label: 'Experience', key: 'experience' },
+  { href: '#projects',   label: 'Projects',   key: 'projects' },
+  { href: '#contact',    label: 'Contact',    key: 'contact' },
 ]
+
+const navLinks = computed(() => {
+  return allLinks.filter(link => store.isSectionVisible(link.key))
+})
 
 function onScroll() {
   isScrolled.value = window.scrollY > 40

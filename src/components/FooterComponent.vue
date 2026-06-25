@@ -37,7 +37,7 @@
       <!-- Bottom Copyright line -->
       <div class="footer-bottom-row">
         <span class="copyright-text">
-          &copy; {{ new Date().getFullYear() }} {{ profile?.name || 'Mohamed Khalil Ben Sedrine' }}. Built with Vue 3 &amp; precision.
+          &copy; {{ new Date().getFullYear() }} {{ profile?.name || 'Mohamed Khalil Ben Sedrine' }}
         </span>
       </div>
     </div>
