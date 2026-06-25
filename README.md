@@ -62,8 +62,8 @@ On first run, the backend will automatically initialize the database schema and 
 
 The admin panel is protected by a hidden URL path and password authentication.
 
-- **Default Hidden URL**: `http://localhost:5173/admin-mkbs-2026`
-- **Default Password**: `mkbs@admin2026`
+- **Default Hidden URL**: `http://localhost:5173/admin`
+- **Default Password**: `admin2026`
 
 > [!IMPORTANT]
 > Change the password immediately upon your first login under the **Settings** panel. You can also customize the secret access URL path there.
