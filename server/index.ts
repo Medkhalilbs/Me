@@ -60,15 +60,12 @@ app.use('/api/images', express.static(path.resolve(__dirname, '../data/images'))
 // Health check
 app.get('/api/health', (_req, res) => res.json({ status: 'ok', ts: Date.now() }))
 
-// Serve built frontend in production
-if (isProduction) {
-  const distPath = path.resolve(__dirname, '../dist')
-  app.use(express.static(distPath))
-  // SPA fallback — all non-API routes go to index.html
-  app.get('*', (_req, res) => {
-    res.sendFile(path.join(distPath, 'index.html'))
-  })
-}
+
+const distPath = path.resolve(__dirname, '../dist')
+app.use(express.static(distPath))
+app.get('*', (_req, res) => {
+  res.sendFile(path.join(distPath, 'index.html'))
+})
 
 app.listen(PORT, () => {
   console.log(`🚀 MKBS Portfolio API running at http://localhost:${PORT}`)
