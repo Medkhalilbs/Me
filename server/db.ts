@@ -1,47 +1,25 @@
-import initSqlJs, { Database } from 'sql.js'
-import fs from 'fs'
-import path from 'path'
-import { fileURLToPath } from 'url'
+import { createClient, type Client } from '@libsql/client'
 import bcrypt from 'bcryptjs'
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
-const DATA_DIR = path.resolve(__dirname, '../data')
-const DB_PATH = path.join(DATA_DIR, 'portfolio.db')
+let client: Client
 
-let db: Database
+export function getDb(): Client {
+  if (client) return client
 
-export async function getDb(): Promise<Database> {
-  if (db) return db
+  client = createClient({
+    url: process.env.TURSO_URL || 'file:local.db',
+    authToken: process.env.TURSO_TOKEN,
+  })
 
-  const SQL = await initSqlJs()
-
-  if (!fs.existsSync(DATA_DIR)) {
-    fs.mkdirSync(DATA_DIR, { recursive: true })
-  }
-
-  if (fs.existsSync(DB_PATH)) {
-    const fileBuffer = fs.readFileSync(DB_PATH)
-    db = new SQL.Database(fileBuffer)
-  } else {
-    db = new SQL.Database()
-  }
-
-  initSchema()
-  saveDb()
-
-  return db
+  return client
 }
 
-export function saveDb(): void {
-  if (!db) return
-  const data = db.export()
-  fs.writeFileSync(DB_PATH, Buffer.from(data))
-}
+export async function initSchema(): Promise<void> {
+  const db = getDb()
 
-function initSchema(): void {
-  db.run(`PRAGMA foreign_keys = ON;`)
+  await db.execute(`PRAGMA foreign_keys = ON;`)
 
-  db.run(`
+  await db.execute(`
     CREATE TABLE IF NOT EXISTS profile (
       id INTEGER PRIMARY KEY DEFAULT 1,
       name TEXT NOT NULL DEFAULT '',
@@ -65,10 +43,10 @@ function initSchema(): void {
 
   // Add profile_image_path to existing DBs that don't have it yet
   try {
-    db.run(`ALTER TABLE profile ADD COLUMN profile_image_path TEXT DEFAULT NULL;`)
+    await db.execute(`ALTER TABLE profile ADD COLUMN profile_image_path TEXT DEFAULT NULL;`)
   } catch (_) { /* column already exists */ }
 
-  db.run(`
+  await db.execute(`
     CREATE TABLE IF NOT EXISTS hero_stats (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       label TEXT NOT NULL,
@@ -79,7 +57,7 @@ function initSchema(): void {
     );
   `)
 
-  db.run(`
+  await db.execute(`
     CREATE TABLE IF NOT EXISTS skill_categories (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT NOT NULL,
@@ -89,7 +67,7 @@ function initSchema(): void {
     );
   `)
 
-  db.run(`
+  await db.execute(`
     CREATE TABLE IF NOT EXISTS skill_tags (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       category_id INTEGER NOT NULL,
@@ -99,7 +77,7 @@ function initSchema(): void {
     );
   `)
 
-  db.run(`
+  await db.execute(`
     CREATE TABLE IF NOT EXISTS experiences (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       company TEXT NOT NULL,
@@ -114,7 +92,7 @@ function initSchema(): void {
     );
   `)
 
-  db.run(`
+  await db.execute(`
     CREATE TABLE IF NOT EXISTS experience_responsibilities (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       experience_id INTEGER NOT NULL,
@@ -124,7 +102,7 @@ function initSchema(): void {
     );
   `)
 
-  db.run(`
+  await db.execute(`
     CREATE TABLE IF NOT EXISTS experience_tech (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       experience_id INTEGER NOT NULL,
@@ -133,7 +111,7 @@ function initSchema(): void {
     );
   `)
 
-  db.run(`
+  await db.execute(`
     CREATE TABLE IF NOT EXISTS projects (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       title TEXT NOT NULL,
@@ -150,7 +128,7 @@ function initSchema(): void {
     );
   `)
 
-  db.run(`
+  await db.execute(`
     CREATE TABLE IF NOT EXISTS project_features (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       project_id INTEGER NOT NULL,
@@ -160,7 +138,7 @@ function initSchema(): void {
     );
   `)
 
-  db.run(`
+  await db.execute(`
     CREATE TABLE IF NOT EXISTS project_tech (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       project_id INTEGER NOT NULL,
@@ -169,7 +147,7 @@ function initSchema(): void {
     );
   `)
 
-  db.run(`
+  await db.execute(`
     CREATE TABLE IF NOT EXISTS education (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       school TEXT NOT NULL,
@@ -181,7 +159,7 @@ function initSchema(): void {
     );
   `)
 
-  db.run(`
+  await db.execute(`
     CREATE TABLE IF NOT EXISTS tech_stack (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT NOT NULL,
@@ -190,7 +168,7 @@ function initSchema(): void {
     );
   `)
 
-  db.run(`
+  await db.execute(`
     CREATE TABLE IF NOT EXISTS why_work_with_me (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       title TEXT NOT NULL,
@@ -200,7 +178,7 @@ function initSchema(): void {
     );
   `)
 
-  db.run(`
+  await db.execute(`
     CREATE TABLE IF NOT EXISTS certifications (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT NOT NULL,
@@ -214,10 +192,10 @@ function initSchema(): void {
   `)
 
   // Add new columns to existing certifications table (no-op if already present)
-  try { db.run(`ALTER TABLE certifications ADD COLUMN status TEXT NOT NULL DEFAULT 'active';`) } catch (_) {}
-  try { db.run(`ALTER TABLE certifications ADD COLUMN is_hidden INTEGER NOT NULL DEFAULT 0;`) } catch (_) {}
+  try { await db.execute(`ALTER TABLE certifications ADD COLUMN status TEXT NOT NULL DEFAULT 'active';`) } catch (_) { }
+  try { await db.execute(`ALTER TABLE certifications ADD COLUMN is_hidden INTEGER NOT NULL DEFAULT 0;`) } catch (_) { }
 
-  db.run(`
+  await db.execute(`
     CREATE TABLE IF NOT EXISTS testimonials (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       author_name TEXT NOT NULL,
@@ -229,7 +207,7 @@ function initSchema(): void {
     );
   `)
 
-  db.run(`
+  await db.execute(`
     CREATE TABLE IF NOT EXISTS cvs (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       language TEXT NOT NULL,
@@ -240,7 +218,7 @@ function initSchema(): void {
     );
   `)
 
-  db.run(`
+  await db.execute(`
     CREATE TABLE IF NOT EXISTS contact_messages (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT NOT NULL,
@@ -252,8 +230,8 @@ function initSchema(): void {
     );
   `)
 
-  // ── NEW: Languages table ─────────────────────────────────────────────────
-  db.run(`
+  // Languages table
+  await db.execute(`
     CREATE TABLE IF NOT EXISTS languages (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT NOT NULL,
@@ -264,8 +242,8 @@ function initSchema(): void {
     );
   `)
 
-  // ── NEW: Section settings table ──────────────────────────────────────────
-  db.run(`
+  // Section settings table
+  await db.execute(`
     CREATE TABLE IF NOT EXISTS section_settings (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       section_key TEXT NOT NULL UNIQUE,
@@ -274,17 +252,14 @@ function initSchema(): void {
     );
   `)
 
-  // Seed or re-seed if the category count or project count does not match the new portfolio specifications
-  let count = 0
-  let skillCategoryCount = 0
-  let projectCount = 0
-  try {
-    count = db.exec(`SELECT COUNT(*) as c FROM profile`)[0]?.values[0][0] as number
-    skillCategoryCount = db.exec(`SELECT COUNT(*) as c FROM skill_categories`)[0]?.values[0][0] as number
-    projectCount = db.exec(`SELECT COUNT(*) as c FROM projects`)[0]?.values[0][0] as number
-  } catch (e) {
-    // If tables are not initialized yet, they will have count 0
-  }
+  // Seed or re-seed if needed
+  const profileResult = await db.execute(`SELECT COUNT(*) as c FROM profile`)
+  const skillCatResult = await db.execute(`SELECT COUNT(*) as c FROM skill_categories`)
+  const projectResult = await db.execute(`SELECT COUNT(*) as c FROM projects`)
+
+  const count = profileResult.rows[0]?.c as number ?? 0
+  const skillCategoryCount = skillCatResult.rows[0]?.c as number ?? 0
+  const projectCount = projectResult.rows[0]?.c as number ?? 0
 
   if (count === 0 || skillCategoryCount !== 7 || projectCount !== 4) {
     console.log('🔄 Old database format detected or empty DB. Performing migration/re-seeding...')
@@ -294,44 +269,50 @@ function initSchema(): void {
       'project_tech', 'education', 'tech_stack', 'why_work_with_me', 'certifications',
       'testimonials', 'cvs', 'contact_messages'
     ]
-    tables.forEach(t => {
-      try { db.run(`DELETE FROM ${t};`) } catch (err) {}
-    })
-    try { db.run(`DELETE FROM sqlite_sequence;`) } catch (err) {}
-    seedData()
+    for (const t of tables) {
+      try { await db.execute(`DELETE FROM ${t};`) } catch (_) { }
+    }
+    try { await db.execute(`DELETE FROM sqlite_sequence;`) } catch (_) { }
+    await seedData()
   }
 
-  // Seed languages if empty (preserve on re-runs)
+  // Seed languages if empty
   try {
-    const langCount = db.exec(`SELECT COUNT(*) as c FROM languages`)[0]?.values[0][0] as number
+    const langResult = await db.execute(`SELECT COUNT(*) as c FROM languages`)
+    const langCount = langResult.rows[0]?.c as number ?? 0
     if (langCount === 0) {
-      seedLanguages()
+      await seedLanguages()
     }
-  } catch (_) {}
+  } catch (_) { }
 
   // Seed section_settings if empty
   try {
-    const secCount = db.exec(`SELECT COUNT(*) as c FROM section_settings`)[0]?.values[0][0] as number
+    const secResult = await db.execute(`SELECT COUNT(*) as c FROM section_settings`)
+    const secCount = secResult.rows[0]?.c as number ?? 0
     if (secCount === 0) {
-      seedSectionSettings()
+      await seedSectionSettings()
     }
-  } catch (_) {}
+  } catch (_) { }
 }
 
-function seedLanguages(): void {
+async function seedLanguages(): Promise<void> {
+  const db = getDb()
   const languages = [
     { name: 'Arabic', code: 'AR', proficiency: 'native', sort_order: 0, is_visible: 1 },
     { name: 'French', code: 'FR', proficiency: 'fluent', sort_order: 1, is_visible: 1 },
     { name: 'English', code: 'EN', proficiency: 'professional', sort_order: 2, is_visible: 1 },
   ]
-  languages.forEach(lang => {
-    db.run(`INSERT INTO languages (name, code, proficiency, sort_order, is_visible) VALUES (?, ?, ?, ?, ?)`,
-      [lang.name, lang.code, lang.proficiency, lang.sort_order, lang.is_visible])
-  })
+  for (const lang of languages) {
+    await db.execute({
+      sql: `INSERT INTO languages (name, code, proficiency, sort_order, is_visible) VALUES (?, ?, ?, ?, ?)`,
+      args: [lang.name, lang.code, lang.proficiency, lang.sort_order, lang.is_visible]
+    })
+  }
   console.log('✅ Languages seeded')
 }
 
-function seedSectionSettings(): void {
+async function seedSectionSettings(): Promise<void> {
+  const db = getDb()
   const sections = [
     { key: 'hero', sort_order: 0 },
     { key: 'about', sort_order: 1 },
@@ -345,13 +326,17 @@ function seedSectionSettings(): void {
     { key: 'why-work-with-me', sort_order: 9 },
     { key: 'contact', sort_order: 10 },
   ]
-  sections.forEach(s => {
-    db.run(`INSERT INTO section_settings (section_key, is_visible, sort_order) VALUES (?, 1, ?)`, [s.key, s.sort_order])
-  })
+  for (const s of sections) {
+    await db.execute({
+      sql: `INSERT INTO section_settings (section_key, is_visible, sort_order) VALUES (?, 1, ?)`,
+      args: [s.key, s.sort_order]
+    })
+  }
   console.log('✅ Section settings seeded')
 }
 
-function seedData(): void {
+async function seedData(): Promise<void> {
+  const db = getDb()
   const hash = bcrypt.hashSync('admin2026', 10)
 
   const aboutParagraphs = JSON.stringify([
@@ -359,24 +344,27 @@ function seedData(): void {
     'My journey began in embedded systems — programming ERIKA OS on AURIX microcontrollers, working with CAN bus and GPIO. Today I architect cloud-native applications with Vue.js, Spring Boot, and AWS. This rare combination gives me a deep understanding of systems at every level, from silicon to cloud.'
   ])
 
-  db.run(`INSERT INTO profile (id, name, title, location, email, phone, linkedin_url, github_url, hero_heading, hero_subtitle, hero_badge, about_paragraphs, callout_title, callout_text, admin_password_hash, admin_secret_path)
-    VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, [
-    'Mohamed Khalil Ben Sedrine',
-    'Full Stack Software Engineer',
-    'Tunis, Tunisia',
-    'medkhalilbs@gmail.com',
-    '+216 54 037 360',
-    'https://linkedin.com/in/mk-bs',
-    'https://github.com/Medkhalilbs',
-    'From Silicon to Cloud',
-    'From embedded systems to cloud architecture — building software at every layer.',
-    'Available for remote & international opportunities',
-    aboutParagraphs,
-    'From Embedded Systems to Full-Stack Engineering',
-    'My background in embedded systems gave me a unique perspective on performance, optimization, and system-level thinking that I now apply to building scalable web applications.',
-    hash,
-    'admin',
-  ])
+  await db.execute({
+    sql: `INSERT INTO profile (id, name, title, location, email, phone, linkedin_url, github_url, hero_heading, hero_subtitle, hero_badge, about_paragraphs, callout_title, callout_text, admin_password_hash, admin_secret_path)
+      VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    args: [
+      'Mohamed Khalil Ben Sedrine',
+      'Full Stack Software Engineer',
+      'Tunis, Tunisia',
+      'medkhalilbs@gmail.com',
+      '+216 54 037 360',
+      'https://linkedin.com/in/mk-bs',
+      'https://github.com/Medkhalilbs',
+      'From Silicon to Cloud',
+      'From embedded systems to cloud architecture — building software at every layer.',
+      'Available for remote & international opportunities',
+      aboutParagraphs,
+      'From Embedded Systems to Full-Stack Engineering',
+      'My background in embedded systems gave me a unique perspective on performance, optimization, and system-level thinking that I now apply to building scalable web applications.',
+      hash,
+      'admin',
+    ]
+  })
 
   // Hero stats
   const stats = [
@@ -385,10 +373,12 @@ function seedData(): void {
     ['15', 'Technologies', '+', 0, 2],
     ['AWS', 'Certified', '', 1, 3],
   ]
-  stats.forEach(([value, label, suffix, isStatic, sortOrder]) => {
-    db.run(`INSERT INTO hero_stats (value, label, suffix, is_static, sort_order) VALUES (?, ?, ?, ?, ?)`,
-      [value, label, suffix, isStatic, sortOrder])
-  })
+  for (const [value, label, suffix, isStatic, sortOrder] of stats) {
+    await db.execute({
+      sql: `INSERT INTO hero_stats (value, label, suffix, is_static, sort_order) VALUES (?, ?, ?, ?, ?)`,
+      args: [value, label, suffix, isStatic, sortOrder]
+    })
+  }
 
   // Skill categories
   const skillCategories = [
@@ -436,14 +426,21 @@ function seedData(): void {
     }
   ]
 
-  skillCategories.forEach((cat, i) => {
-    db.run(`INSERT INTO skill_categories (name, icon, proficiency, sort_order) VALUES (?, ?, ?, ?)`,
-      [cat.name, cat.icon, cat.proficiency, i])
-    const catId = db.exec(`SELECT last_insert_rowid() as id`)[0].values[0][0] as number
-    cat.tags.forEach((tag, j) => {
-      db.run(`INSERT INTO skill_tags (category_id, name, sort_order) VALUES (?, ?, ?)`, [catId, tag, j])
+  for (let i = 0; i < skillCategories.length; i++) {
+    const cat = skillCategories[i]
+    await db.execute({
+      sql: `INSERT INTO skill_categories (name, icon, proficiency, sort_order) VALUES (?, ?, ?, ?)`,
+      args: [cat.name, cat.icon, cat.proficiency, i]
     })
-  })
+    const catIdResult = await db.execute(`SELECT last_insert_rowid() as id`)
+    const catId = catIdResult.rows[0]?.id as number
+    for (let j = 0; j < cat.tags.length; j++) {
+      await db.execute({
+        sql: `INSERT INTO skill_tags (category_id, name, sort_order) VALUES (?, ?, ?)`,
+        args: [catId, cat.tags[j], j]
+      })
+    }
+  }
 
   // Experiences
   const experiences = [
@@ -514,17 +511,27 @@ function seedData(): void {
     }
   ]
 
-  experiences.forEach((exp, i) => {
-    db.run(`INSERT INTO experiences (company, role, client, start_date, end_date, location, is_current, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-      [exp.company, exp.role, exp.client, exp.start_date, exp.end_date, exp.location, exp.is_current, i])
-    const expId = db.exec(`SELECT last_insert_rowid() as id`)[0].values[0][0] as number
-    exp.responsibilities.forEach((r, j) => {
-      db.run(`INSERT INTO experience_responsibilities (experience_id, text, sort_order) VALUES (?, ?, ?)`, [expId, r, j])
+  for (let i = 0; i < experiences.length; i++) {
+    const exp = experiences[i]
+    await db.execute({
+      sql: `INSERT INTO experiences (company, role, client, start_date, end_date, location, is_current, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      args: [exp.company, exp.role, exp.client, exp.start_date, exp.end_date, exp.location, exp.is_current, i]
     })
-    exp.tech.forEach(t => {
-      db.run(`INSERT INTO experience_tech (experience_id, name) VALUES (?, ?)`, [expId, t])
-    })
-  })
+    const expIdResult = await db.execute(`SELECT last_insert_rowid() as id`)
+    const expId = expIdResult.rows[0]?.id as number
+    for (let j = 0; j < exp.responsibilities.length; j++) {
+      await db.execute({
+        sql: `INSERT INTO experience_responsibilities (experience_id, text, sort_order) VALUES (?, ?, ?)`,
+        args: [expId, exp.responsibilities[j], j]
+      })
+    }
+    for (const t of exp.tech) {
+      await db.execute({
+        sql: `INSERT INTO experience_tech (experience_id, name) VALUES (?, ?)`,
+        args: [expId, t]
+      })
+    }
+  }
 
   // Projects
   const projects = [
@@ -582,17 +589,27 @@ function seedData(): void {
     }
   ]
 
-  projects.forEach((proj, i) => {
-    db.run(`INSERT INTO projects (title, category, description, problem, solution, business_impact, status, github_url, demo_url, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [proj.title, proj.category, proj.description, proj.problem, proj.solution, proj.business_impact, proj.status, proj.github_url, proj.demo_url, i])
-    const projId = db.exec(`SELECT last_insert_rowid() as id`)[0].values[0][0] as number
-    proj.features.forEach((f, j) => {
-      db.run(`INSERT INTO project_features (project_id, text, sort_order) VALUES (?, ?, ?)`, [projId, f, j])
+  for (let i = 0; i < projects.length; i++) {
+    const proj = projects[i]
+    await db.execute({
+      sql: `INSERT INTO projects (title, category, description, problem, solution, business_impact, status, github_url, demo_url, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      args: [proj.title, proj.category, proj.description, proj.problem, proj.solution, proj.business_impact, proj.status, proj.github_url, proj.demo_url, i]
     })
-    proj.tech.forEach(t => {
-      db.run(`INSERT INTO project_tech (project_id, name) VALUES (?, ?)`, [projId, t])
-    })
-  })
+    const projIdResult = await db.execute(`SELECT last_insert_rowid() as id`)
+    const projId = projIdResult.rows[0]?.id as number
+    for (let j = 0; j < proj.features.length; j++) {
+      await db.execute({
+        sql: `INSERT INTO project_features (project_id, text, sort_order) VALUES (?, ?, ?)`,
+        args: [projId, proj.features[j], j]
+      })
+    }
+    for (const t of proj.tech) {
+      await db.execute({
+        sql: `INSERT INTO project_tech (project_id, name) VALUES (?, ?)`,
+        args: [projId, t]
+      })
+    }
+  }
 
   // Education
   const education = [
@@ -612,10 +629,13 @@ function seedData(): void {
     }
   ]
 
-  education.forEach((edu, i) => {
-    db.run(`INSERT INTO education (school, degree, start_year, end_year, description, sort_order) VALUES (?, ?, ?, ?, ?, ?)`,
-      [edu.school, edu.degree, edu.start_year, edu.end_year, edu.description, i])
-  })
+  for (let i = 0; i < education.length; i++) {
+    const edu = education[i]
+    await db.execute({
+      sql: `INSERT INTO education (school, degree, start_year, end_year, description, sort_order) VALUES (?, ?, ?, ?, ?, ?)`,
+      args: [edu.school, edu.degree, edu.start_year, edu.end_year, edu.description, i]
+    })
+  }
 
   // Tech stack
   const techStack = [
@@ -624,9 +644,13 @@ function seedData(): void {
     ['n8n', 'arrow-right-left'], ['AWS', 'cloud'], ['GCP', 'cloud'], ['Cloudflare', 'shield'], ['Oracle Database', 'database'],
     ['PostgreSQL', 'database'], ['MongoDB', 'database'], ['SonarQube', 'shield'], ['Jira', 'check-square'], ['Talend TOS', 'arrow-right-left']
   ]
-  techStack.forEach(([name, icon], i) => {
-    db.run(`INSERT INTO tech_stack (name, icon, sort_order) VALUES (?, ?, ?)`, [name, icon, i])
-  })
+  for (let i = 0; i < techStack.length; i++) {
+    const [name, icon] = techStack[i]
+    await db.execute({
+      sql: `INSERT INTO tech_stack (name, icon, sort_order) VALUES (?, ?, ?)`,
+      args: [name, icon, i]
+    })
+  }
 
   // Why Work With Me
   const whyCards = [
@@ -635,14 +659,19 @@ function seedData(): void {
     ['Quality-First Mindset', 'SonarQube analysis, PENTEST security testing, and CI/CD pipelines built into every delivery.', 'shield'],
     ['Bilingual & Global', 'Arabic (native), French (fluent), English (proficient) — bridging teams across cultures.', 'globe']
   ]
-  whyCards.forEach(([title, description, icon], i) => {
-    db.run(`INSERT INTO why_work_with_me (title, description, icon, sort_order) VALUES (?, ?, ?, ?)`, [title, description, icon, i])
-  })
+  for (let i = 0; i < whyCards.length; i++) {
+    const [title, description, icon] = whyCards[i]
+    await db.execute({
+      sql: `INSERT INTO why_work_with_me (title, description, icon, sort_order) VALUES (?, ?, ?, ?)`,
+      args: [title, description, icon, i]
+    })
+  }
 
   // Certifications
-  db.run(`INSERT INTO certifications (name, issuer, description, verified, sort_order, status, is_hidden) VALUES (?, ?, ?, ?, ?, ?, ?)`,
-    ['AWS Certified Cloud Practitioner', 'Amazon Web Services', 'Foundational certification demonstrating cloud knowledge across AWS services, security, architecture, and pricing.', 1, 0, 'active', 0])
+  await db.execute({
+    sql: `INSERT INTO certifications (name, issuer, description, verified, sort_order, status, is_hidden) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+    args: ['AWS Certified Cloud Practitioner', 'Amazon Web Services', 'Foundational certification demonstrating cloud knowledge across AWS services, security, architecture, and pricing.', 1, 0, 'active', 0]
+  })
 
-  saveDb()
   console.log('✅ Database seeded with new portfolio data')
 }

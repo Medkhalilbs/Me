@@ -2,6 +2,7 @@ import express from 'express'
 import cors from 'cors'
 import path from 'path'
 import { fileURLToPath } from 'url'
+import { initSchema } from './db.js'
 
 import authRouter from './routes/auth.js'
 import profileRouter from './routes/profile.js'
@@ -51,11 +52,7 @@ app.use('/api/cvs', cvsRouter)
 app.use('/api/languages', languagesRouter)
 app.use('/api/sections', sectionsRouter)
 
-// Static data directory (existing)
-app.use('/data', express.static(path.resolve(__dirname, '../data')))
 
-// Static images directory for profile & project uploads
-app.use('/api/images', express.static(path.resolve(__dirname, '../data/images')))
 
 // Health check
 app.get('/api/health', (_req, res) => res.json({ status: 'ok', ts: Date.now() }))
@@ -67,8 +64,15 @@ app.get('*', (_req, res) => {
   res.sendFile(path.join(distPath, 'index.html'))
 })
 
-app.listen(PORT, () => {
-  console.log(`🚀 MKBS Portfolio API running at http://localhost:${PORT}`)
-})
+initSchema()
+  .then(() => {
+    app.listen(PORT, () => {
+      console.log(`🚀 MKBS Portfolio API running at http://localhost:${PORT}`)
+    })
+  })
+  .catch((err) => {
+    console.error('❌ Failed to initialize database:', err)
+    process.exit(1)
+  })
 
 export default app

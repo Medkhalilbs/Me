@@ -29,7 +29,7 @@
         >
           <!-- Project Cover Image -->
           <div v-if="project.hero_image_path" class="project-image-cover">
-            <img :src="`/api/images/projects/${project.hero_image_path}`" :alt="project.title" class="proj-cover-img" />
+            <img :src="project.hero_image_path" :alt="project.title" class="proj-cover-img" />
           </div>
 
           <!-- Card Header Info -->

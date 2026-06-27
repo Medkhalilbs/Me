@@ -1,6 +1,6 @@
 import { Router } from 'express'
 import bcrypt from 'bcryptjs'
-import { getDb, saveDb } from '../db.js'
+import { getDb } from '../db.js'
 
 const router = Router()
 
@@ -16,11 +16,11 @@ router.post('/login', async (req, res) => {
   const { password } = req.body
   if (!password) return res.status(400).json({ error: 'Password required' })
 
-  const db = await getDb()
-  const result = db.exec(`SELECT admin_password_hash, admin_secret_path FROM profile WHERE id = 1`)
-  if (!result[0]) return res.status(500).json({ error: 'Profile not found' })
+  const db = getDb()
+  const result = await db.execute(`SELECT admin_password_hash, admin_secret_path FROM profile WHERE id = 1`)
+  if (!result.rows[0]) return res.status(500).json({ error: 'Profile not found' })
 
-  const [hash] = result[0].values[0] as string[]
+  const hash = result.rows[0].admin_password_hash as string
   const valid = bcrypt.compareSync(password, hash)
   if (!valid) return res.status(401).json({ error: 'Invalid password' })
 
@@ -48,17 +48,16 @@ router.post('/change-password', async (req, res) => {
   const { currentPassword, newPassword } = req.body
   if (!currentPassword || !newPassword) return res.status(400).json({ error: 'Both passwords required' })
 
-  const db = await getDb()
-  const result = db.exec(`SELECT admin_password_hash FROM profile WHERE id = 1`)
-  const [hash] = result[0].values[0] as string[]
+  const db = getDb()
+  const result = await db.execute(`SELECT admin_password_hash FROM profile WHERE id = 1`)
+  const hash = result.rows[0].admin_password_hash as string
 
   if (!bcrypt.compareSync(currentPassword, hash)) {
     return res.status(401).json({ error: 'Current password is incorrect' })
   }
 
   const newHash = bcrypt.hashSync(newPassword, 10)
-  db.run(`UPDATE profile SET admin_password_hash = ? WHERE id = 1`, [newHash])
-  saveDb()
+  await db.execute({ sql: `UPDATE profile SET admin_password_hash = ? WHERE id = 1`, args: [newHash] })
   res.json({ ok: true })
 })
 

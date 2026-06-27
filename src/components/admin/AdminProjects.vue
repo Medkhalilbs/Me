@@ -143,7 +143,7 @@
             <label class="form-label">Project Cover Image</label>
             <div class="project-image-upload-wrapper">
               <div v-if="form.hero_image_path" class="current-project-image-preview">
-                <img :src="`/api/images/projects/${form.hero_image_path}`" alt="Project Cover Preview" class="admin-project-img" />
+                <img :src="form.hero_image_path" alt="Project Cover Preview" class="admin-project-img" />
                 <button type="button" @click="deleteProjectImage" class="btn btn-outline btn-sm danger">🗑️ Delete Image</button>
               </div>
               <div v-else class="upload-placeholder">
