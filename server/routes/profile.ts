@@ -51,24 +51,39 @@ router.get('/admin', requireAuth, async (_req, res) => {
 
 // POST /api/profile/upload-image — admin, upload profile photo to Cloudinary
 router.post('/upload-image', requireAuth, profileUpload.single('image'), async (req, res) => {
-  if (!req.file) return res.status(400).json({ error: 'No image file uploaded' })
+  console.log('--- Profile Upload Debug ---')
+  console.log('req.file:', req.file ? JSON.stringify(req.file) : 'No file received')
 
-  const db = getDb()
+  try {
+    if (!req.file) {
+      console.log('No file received')
+      return res.status(400).json({ error: 'No image file uploaded' })
+    }
 
-  // Delete old image from Cloudinary if it exists
-  const existing = await db.execute(`SELECT profile_image_path FROM profile WHERE id = 1`)
-  const oldUrl = existing.rows[0]?.profile_image_path as string | null
-  if (oldUrl) {
-    try {
-      // Extract public_id from the Cloudinary URL (everything after /upload/vXXX/)
-      const match = oldUrl.match(/\/upload\/(?:v\d+\/)?(.+)\.[^.]+$/)
-      if (match) await cloudinary.uploader.destroy(match[1])
-    } catch (_) {}
+    const db = getDb()
+
+    // Delete old image from Cloudinary if it exists
+    const existing = await db.execute(`SELECT profile_image_path FROM profile WHERE id = 1`)
+    const oldUrl = existing.rows[0]?.profile_image_path as string | null
+    if (oldUrl) {
+      try {
+        // Extract public_id from the Cloudinary URL (everything after /upload/vXXX/)
+        const match = oldUrl.match(/\/upload\/(?:v\d+\/)?(.+)\.[^.]+$/)
+        if (match) await cloudinary.uploader.destroy(match[1])
+      } catch (err) {
+        console.error('Error destroying old profile image from Cloudinary:', err)
+      }
+    }
+
+    // req.file.path = full Cloudinary URL (https://res.cloudinary.com/...)
+    await db.execute({ sql: `UPDATE profile SET profile_image_path = ? WHERE id = 1`, args: [req.file.path] })
+    res.json({ ok: true, path: req.file.path })
+  } catch (err: any) {
+    console.error('Profile image upload handler error:', err)
+    res.status(500).json({
+      error: err instanceof Error ? err.message : String(err)
+    })
   }
-
-  // req.file.path = full Cloudinary URL (https://res.cloudinary.com/...)
-  await db.execute({ sql: `UPDATE profile SET profile_image_path = ? WHERE id = 1`, args: [req.file.path] })
-  res.json({ ok: true, path: req.file.path })
 })
 
 // DELETE /api/profile/image — admin, remove profile photo from Cloudinary
