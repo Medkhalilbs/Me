@@ -58,8 +58,19 @@ app.use('/api/sections', sectionsRouter)
 app.get('/api/health', (_req, res) => res.json({ status: 'ok', ts: Date.now() }))
 
 
+import util from 'util'
+
 const distPath = path.resolve(__dirname, '../dist')
 app.use(express.static(distPath))
+
+// Global error handler middleware
+app.use((err: any, _req: any, res: any, _next: any) => {
+  console.error('Express error:', util.inspect(err, { depth: null }))
+  res.status(500).json({
+    error: err?.message || util.inspect(err),
+  })
+})
+
 app.get('*', (_req, res) => {
   res.sendFile(path.join(distPath, 'index.html'))
 })

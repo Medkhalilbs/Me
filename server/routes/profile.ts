@@ -5,6 +5,8 @@ import cloudinary from '../cloudinary.js'
 import { getDb } from '../db.js'
 import { requireAuth } from './auth.js'
 
+import util from 'util'
+
 const profileStorage = new CloudinaryStorage({
   cloudinary,
   params: {
@@ -50,7 +52,15 @@ router.get('/admin', requireAuth, async (_req, res) => {
 })
 
 // POST /api/profile/upload-image — admin, upload profile photo to Cloudinary
-router.post('/upload-image', requireAuth, profileUpload.single('image'), async (req, res) => {
+router.post('/upload-image', requireAuth, (req, res, next) => {
+  profileUpload.single('image')(req, res, (err) => {
+    if (err) {
+      console.error('Multer/Cloudinary error:', util.inspect(err, { depth: null }))
+      return res.status(500).json({ error: err?.message || String(err) })
+    }
+    next()
+  })
+}, async (req, res) => {
   console.log('--- Profile Upload Debug ---')
   console.log('req.file:', req.file ? JSON.stringify(req.file) : 'No file received')
 
@@ -71,7 +81,7 @@ router.post('/upload-image', requireAuth, profileUpload.single('image'), async (
         const match = oldUrl.match(/\/upload\/(?:v\d+\/)?(.+)\.[^.]+$/)
         if (match) await cloudinary.uploader.destroy(match[1])
       } catch (err) {
-        console.error('Error destroying old profile image from Cloudinary:', err)
+        console.error('Error destroying old profile image from Cloudinary:', util.inspect(err, { depth: null }))
       }
     }
 
@@ -79,7 +89,7 @@ router.post('/upload-image', requireAuth, profileUpload.single('image'), async (
     await db.execute({ sql: `UPDATE profile SET profile_image_path = ? WHERE id = 1`, args: [req.file.path] })
     res.json({ ok: true, path: req.file.path })
   } catch (err: any) {
-    console.error('Profile image upload handler error:', err)
+    console.error('Profile image upload handler error:', util.inspect(err, { depth: null }))
     res.status(500).json({
       error: err instanceof Error ? err.message : String(err)
     })
