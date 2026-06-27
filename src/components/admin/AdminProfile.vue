@@ -165,10 +165,20 @@ async function handleImageUpload(e: Event) {
   formData.append('image', file)
 
   try {
-    const res = await api.post('/profile/upload-image', formData)
-    form.profile_image_path = res.data.path
+    const token = localStorage.getItem('admin_token')
+    const res = await fetch('/api/profile/upload-image', {
+      method: 'POST',
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      body: formData,
+      credentials: 'include',
+    })
+    const data = await res.json()
+    if (!res.ok) {
+      throw new Error(data.error || 'Image upload failed')
+    }
+    form.profile_image_path = data.path
   } catch (err: any) {
-    error.value = err.response?.data?.error || 'Image upload failed'
+    error.value = err.message || 'Image upload failed'
   } finally {
     uploadingImage.value = false
   }

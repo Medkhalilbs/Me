@@ -133,11 +133,21 @@ async function submitForm() {
   fd.append('is_default', form.is_default ? '1' : '0')
 
   try {
-    await api.post('/cvs', fd)
+    const token = localStorage.getItem('admin_token')
+    const res = await fetch('/api/cvs', {
+      method: 'POST',
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      body: fd,
+      credentials: 'include',
+    })
+    const data = await res.json()
+    if (!res.ok) {
+      throw new Error(data.error || 'Upload failed. Check if file is PDF under 10MB.')
+    }
     await loadCVs()
     closeForm()
   } catch (e: any) {
-    error.value = e.response?.data?.error || 'Upload failed. Check if file is PDF under 10MB.'
+    error.value = e.message || 'Upload failed. Check if file is PDF under 10MB.'
   } finally {
     uploading.value = false
   }
