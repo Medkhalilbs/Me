@@ -165,9 +165,7 @@ async function handleImageUpload(e: Event) {
   formData.append('image', file)
 
   try {
-    const res = await api.post('/profile/upload-image', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' }
-    })
+    const res = await api.post('/profile/upload-image', formData)
     form.profile_image_path = res.data.path
   } catch (err: any) {
     error.value = err.response?.data?.error || 'Image upload failed'

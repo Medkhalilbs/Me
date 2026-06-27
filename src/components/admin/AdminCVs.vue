@@ -133,11 +133,7 @@ async function submitForm() {
   fd.append('is_default', form.is_default ? '1' : '0')
 
   try {
-    await api.post('/cvs', fd, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    })
+    await api.post('/cvs', fd)
     await loadCVs()
     closeForm()
   } catch (e: any) {
