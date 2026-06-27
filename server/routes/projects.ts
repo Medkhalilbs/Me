@@ -5,6 +5,8 @@ import cloudinary from '../cloudinary.js'
 import { getDb } from '../db.js'
 import { requireAuth } from './auth.js'
 
+import util from 'util'
+
 const projectStorage = new CloudinaryStorage({
   cloudinary,
   params: {
@@ -122,7 +124,15 @@ router.patch('/:id', requireAuth, async (req, res) => {
 })
 
 // POST /api/projects/:id/upload-image — admin
-router.post('/:id/upload-image', requireAuth, projectUpload.single('image'), async (req, res) => {
+router.post('/:id/upload-image', requireAuth, (req, res, next) => {
+  projectUpload.single('image')(req, res, (err) => {
+    if (err) {
+      console.error('Multer/Cloudinary error:', util.inspect(err, { depth: null }))
+      return res.status(500).json({ error: err?.message || String(err) })
+    }
+    next()
+  })
+}, async (req, res) => {
   console.log('--- Project Upload Debug ---')
   console.log('req.file:', req.file ? JSON.stringify(req.file) : 'No file received')
   console.log('req.params.id:', req.params.id)
@@ -141,7 +151,7 @@ router.post('/:id/upload-image', requireAuth, projectUpload.single('image'), asy
     await db.execute({ sql: `UPDATE projects SET hero_image_path = ? WHERE id = ?`, args: [req.file.path, id] })
     res.json({ ok: true, path: req.file.path })
   } catch (err: any) {
-    console.error('Project image upload handler error:', err)
+    console.error('Project image upload handler error:', util.inspect(err, { depth: null }))
     res.status(500).json({
       error: err instanceof Error ? err.message : String(err)
     })

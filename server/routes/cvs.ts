@@ -5,6 +5,8 @@ import cloudinary from '../cloudinary.js'
 import { getDb } from '../db.js'
 import { requireAuth } from './auth.js'
 
+import util from 'util'
+
 const cvStorage = new CloudinaryStorage({
   cloudinary,
   params: {
@@ -52,7 +54,15 @@ router.get('/download/:id', async (req, res) => {
 })
 
 // POST /api/cvs — admin upload
-router.post('/', requireAuth, upload.single('cv'), async (req, res) => {
+router.post('/', requireAuth, (req, res, next) => {
+  upload.single('cv')(req, res, (err) => {
+    if (err) {
+      console.error('Multer/Cloudinary error:', util.inspect(err, { depth: null }))
+      return res.status(500).json({ error: err?.message || String(err) })
+    }
+    next()
+  })
+}, async (req, res) => {
   console.log('--- CV Upload Debug ---')
   console.log('req.file:', req.file ? JSON.stringify(req.file) : 'No file received')
   console.log('req.body:', JSON.stringify(req.body))
@@ -76,7 +86,7 @@ router.post('/', requireAuth, upload.single('cv'), async (req, res) => {
     })
     res.status(201).json({ ok: true, filename: req.file.originalname, url: req.file.path })
   } catch (err: any) {
-    console.error('CV upload error:', err)
+    console.error('CV upload error:', util.inspect(err, { depth: null }))
     res.status(500).json({
       ok: false,
       error: err instanceof Error ? err.message : String(err)
