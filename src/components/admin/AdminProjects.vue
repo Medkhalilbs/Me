@@ -346,9 +346,7 @@ async function handleProjectImageUpload(e: Event) {
   formData.append('image', file)
 
   try {
-    const res = await api.post(`/projects/${editingId.value}/upload-image`, formData, {
-      headers: { 'Content-Type': 'multipart/form-data' }
-    })
+    const res = await api.post(`/projects/${editingId.value}/upload-image`, formData)
     form.hero_image_path = res.data.path
   } catch (err: any) {
     error.value = err.response?.data?.error || 'Cover image upload failed'
