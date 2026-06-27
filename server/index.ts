@@ -2,6 +2,7 @@ import express from 'express'
 import cors from 'cors'
 import path from 'path'
 import { fileURLToPath } from 'url'
+import { initSchema } from './db.js'
 
 import authRouter from './routes/auth.js'
 import profileRouter from './routes/profile.js'
@@ -67,8 +68,15 @@ app.get('*', (_req, res) => {
   res.sendFile(path.join(distPath, 'index.html'))
 })
 
-app.listen(PORT, () => {
-  console.log(`🚀 MKBS Portfolio API running at http://localhost:${PORT}`)
-})
+initSchema()
+  .then(() => {
+    app.listen(PORT, () => {
+      console.log(`🚀 MKBS Portfolio API running at http://localhost:${PORT}`)
+    })
+  })
+  .catch((err) => {
+    console.error('❌ Failed to initialize database:', err)
+    process.exit(1)
+  })
 
 export default app

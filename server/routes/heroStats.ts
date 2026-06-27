@@ -1,5 +1,5 @@
 import { Router } from 'express'
-import { getDb, saveDb } from '../db.js'
+import { getDb } from '../db.js'
 import { requireAuth } from './auth.js'
 
 const router = Router()
@@ -11,12 +11,9 @@ function rowToObj(cols: string[], row: any[]) {
 
 // GET /api/hero-stats — public
 router.get('/', async (_req, res) => {
-  const db = await getDb()
-  const result = db.exec(`SELECT * FROM hero_stats ORDER BY sort_order ASC`)
-  if (!result[0]) return res.json([])
-  const cols = result[0].columns
-  const stats = result[0].values.map(row => rowToObj(cols, row))
-  res.json(stats)
+  const db = getDb()
+  const result = await db.execute(`SELECT * FROM hero_stats ORDER BY sort_order ASC`)
+  res.json(result.rows.map(r => ({ ...r })))
 })
 
 // POST /api/hero-stats — admin only
@@ -24,19 +21,18 @@ router.post('/', requireAuth, async (req, res) => {
   const { label, value, suffix, is_static, sort_order } = req.body
   if (!label || !value) return res.status(400).json({ error: 'Label and Value are required' })
 
-  const db = await getDb()
-  db.run(
-    `INSERT INTO hero_stats (label, value, suffix, is_static, sort_order) VALUES (?, ?, ?, ?, ?)`,
-    [label, value, suffix || '', is_static ? 1 : 0, sort_order || 0]
-  )
-  saveDb()
+  const db = getDb()
+  await db.execute({
+    sql: `INSERT INTO hero_stats (label, value, suffix, is_static, sort_order) VALUES (?, ?, ?, ?, ?)`,
+    args: [label, value, suffix || '', is_static ? 1 : 0, sort_order || 0]
+  })
   res.status(201).json({ ok: true })
 })
 
 // PATCH /api/hero-stats/:id — admin only
 router.patch('/:id', requireAuth, async (req, res) => {
   const { id } = req.params
-  const db = await getDb()
+  const db = getDb()
 
   const allowed = ['label', 'value', 'suffix', 'is_static', 'sort_order']
   const updates: string[] = []
@@ -52,17 +48,15 @@ router.patch('/:id', requireAuth, async (req, res) => {
   if (updates.length === 0) return res.status(400).json({ error: 'No valid fields' })
   values.push(id)
 
-  db.run(`UPDATE hero_stats SET ${updates.join(', ')} WHERE id = ?`, values)
-  saveDb()
+  await db.execute({ sql: `UPDATE hero_stats SET ${updates.join(', ')} WHERE id = ?`, args: values })
   res.json({ ok: true })
 })
 
 // DELETE /api/hero-stats/:id — admin only
 router.delete('/:id', requireAuth, async (req, res) => {
   const { id } = req.params
-  const db = await getDb()
-  db.run(`DELETE FROM hero_stats WHERE id = ?`, [id])
-  saveDb()
+  const db = getDb()
+  await db.execute({ sql: `DELETE FROM hero_stats WHERE id = ?`, args: [id] })
   res.json({ ok: true })
 })
 

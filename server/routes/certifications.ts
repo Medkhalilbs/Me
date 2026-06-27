@@ -1,39 +1,32 @@
 import { Router } from 'express'
-import { getDb, saveDb } from '../db.js'
+import { getDb } from '../db.js'
 import { requireAuth } from './auth.js'
 
 const router = Router()
 
-function rowToObj(cols: string[], row: any[]) {
-  return Object.fromEntries(cols.map((c, i) => [c, row[i]]))
-}
-
 // GET /api/certifications — public (non-hidden only)
 router.get('/', async (_req, res) => {
-  const db = await getDb()
-  const result = db.exec(`SELECT * FROM certifications WHERE is_hidden = 0 ORDER BY sort_order ASC`)
-  if (!result[0]) return res.json([])
-  res.json(result[0].values.map(row => rowToObj(result[0].columns, row)))
+  const db = getDb()
+  const result = await db.execute(`SELECT * FROM certifications WHERE is_hidden = 0 ORDER BY sort_order ASC`)
+  res.json(result.rows.map(r => ({ ...r })))
 })
 
 // GET /api/certifications/admin — admin (all, including hidden)
 router.get('/admin', requireAuth, async (_req, res) => {
-  const db = await getDb()
-  const result = db.exec(`SELECT * FROM certifications ORDER BY sort_order ASC`)
-  if (!result[0]) return res.json([])
-  res.json(result[0].values.map(row => rowToObj(result[0].columns, row)))
+  const db = getDb()
+  const result = await db.execute(`SELECT * FROM certifications ORDER BY sort_order ASC`)
+  res.json(result.rows.map(r => ({ ...r })))
 })
 
 // POST /api/certifications — admin create
 router.post('/', requireAuth, async (req, res) => {
   const { name, issuer, description, verified, sort_order, status, is_hidden } = req.body
   if (!name || !issuer) return res.status(400).json({ error: 'name and issuer required' })
-  const db = await getDb()
-  db.run(
-    `INSERT INTO certifications (name, issuer, description, verified, sort_order, status, is_hidden) VALUES (?, ?, ?, ?, ?, ?, ?)`,
-    [name, issuer, description || '', verified ? 1 : 1, sort_order || 0, status || 'active', is_hidden ? 1 : 0]
-  )
-  saveDb()
+  const db = getDb()
+  await db.execute({
+    sql: `INSERT INTO certifications (name, issuer, description, verified, sort_order, status, is_hidden) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+    args: [name, issuer, description || '', verified ? 1 : 1, sort_order || 0, status || 'active', is_hidden ? 1 : 0]
+  })
   res.status(201).json({ ok: true })
 })
 
@@ -54,17 +47,15 @@ router.patch('/:id', requireAuth, async (req, res) => {
   }
   if (!updates.length) return res.status(400).json({ error: 'No valid fields' })
   values.push(req.params.id)
-  const db = await getDb()
-  db.run(`UPDATE certifications SET ${updates.join(', ')} WHERE id = ?`, values)
-  saveDb()
+  const db = getDb()
+  await db.execute({ sql: `UPDATE certifications SET ${updates.join(', ')} WHERE id = ?`, args: values })
   res.json({ ok: true })
 })
 
 // DELETE /api/certifications/:id — admin
 router.delete('/:id', requireAuth, async (req, res) => {
-  const db = await getDb()
-  db.run(`DELETE FROM certifications WHERE id = ?`, [req.params.id])
-  saveDb()
+  const db = getDb()
+  await db.execute({ sql: `DELETE FROM certifications WHERE id = ?`, args: [req.params.id] })
   res.json({ ok: true })
 })
 

@@ -3,7 +3,7 @@ import multer from 'multer'
 import path from 'path'
 import fs from 'fs'
 import { fileURLToPath } from 'url'
-import { getDb, saveDb } from '../db.js'
+import { getDb } from '../db.js'
 import { requireAuth } from './auth.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -35,34 +35,22 @@ const projectUpload = multer({
 
 const router = Router()
 
-function rowToObj(cols: string[], row: any[]) {
-  return Object.fromEntries(cols.map((c, i) => [c, row[i]]))
-}
-
 // GET /api/projects — public
 router.get('/', async (_req, res) => {
-  const db = await getDb()
-  const projs = db.exec(`SELECT * FROM projects ORDER BY sort_order ASC`)
-  const feats = db.exec(`SELECT * FROM project_features ORDER BY project_id, sort_order ASC`)
-  const techs = db.exec(`SELECT * FROM project_tech ORDER BY project_id ASC`)
+  const db = getDb()
+  const projs = await db.execute(`SELECT * FROM projects ORDER BY sort_order ASC`)
+  const feats = await db.execute(`SELECT * FROM project_features ORDER BY project_id, sort_order ASC`)
+  const techs = await db.execute(`SELECT * FROM project_tech ORDER BY project_id ASC`)
 
-  if (!projs[0]) return res.json([])
-
-  const projCols = projs[0].columns
-  const featCols = feats[0]?.columns || []
-  const techCols = techs[0]?.columns || []
-  const featRows = feats[0]?.values || []
-  const techRows = techs[0]?.values || []
-
-  const result = projs[0].values.map(row => {
-    const proj = rowToObj(projCols, row) as any
-    proj.features = featRows
-      .filter(f => f[featCols.indexOf('project_id')] === proj.id)
-      .map(f => rowToObj(featCols, f))
-    proj.tech = techRows
-      .filter(t => t[techCols.indexOf('project_id')] === proj.id)
-      .map(t => t[techCols.indexOf('name')])
-    return proj
+  const result = projs.rows.map(proj => {
+    const p = { ...proj } as any
+    p.features = feats.rows
+      .filter(f => f.project_id === proj.id)
+      .map(f => ({ ...f }))
+    p.tech = techs.rows
+      .filter(t => t.project_id === proj.id)
+      .map(t => t.name)
+    return p
   })
 
   res.json(result)
@@ -73,23 +61,31 @@ router.post('/', requireAuth, async (req, res) => {
   const { title, category, description, problem, solution, business_impact, status, github_url, demo_url, sort_order, features, tech } = req.body
   if (!title) return res.status(400).json({ error: 'Title required' })
 
-  const db = await getDb()
-  db.run(
-    `INSERT INTO projects (title, category, description, problem, solution, business_impact, status, github_url, demo_url, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [title, category || 'web', description || '', problem || '', solution || '', business_impact || '', status || 'completed', github_url || '', demo_url || '', sort_order || 0]
-  )
-  const projId = (db.exec(`SELECT last_insert_rowid() as id`)[0].values[0][0]) as number
+  const db = getDb()
+  await db.execute({
+    sql: `INSERT INTO projects (title, category, description, problem, solution, business_impact, status, github_url, demo_url, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    args: [title, category || 'web', description || '', problem || '', solution || '', business_impact || '', status || 'completed', github_url || '', demo_url || '', sort_order || 0]
+  })
+  const idResult = await db.execute(`SELECT last_insert_rowid() as id`)
+  const projId = idResult.rows[0].id as number
 
   if (Array.isArray(features)) {
-    features.forEach((f: string, j: number) =>
-      db.run(`INSERT INTO project_features (project_id, text, sort_order) VALUES (?, ?, ?)`, [projId, f, j]))
+    for (let j = 0; j < features.length; j++) {
+      await db.execute({
+        sql: `INSERT INTO project_features (project_id, text, sort_order) VALUES (?, ?, ?)`,
+        args: [projId, features[j], j]
+      })
+    }
   }
   if (Array.isArray(tech)) {
-    tech.forEach((t: string) =>
-      db.run(`INSERT INTO project_tech (project_id, name) VALUES (?, ?)`, [projId, t]))
+    for (const t of tech) {
+      await db.execute({
+        sql: `INSERT INTO project_tech (project_id, name) VALUES (?, ?)`,
+        args: [projId, t]
+      })
+    }
   }
 
-  saveDb()
   res.status(201).json({ ok: true, id: projId })
 })
 
@@ -104,26 +100,33 @@ router.patch('/:id', requireAuth, async (req, res) => {
     if (key in req.body) { updates.push(`${key} = ?`); values.push(req.body[key]) }
   }
 
-  const db = await getDb()
+  const db = getDb()
 
   if (updates.length) {
     values.push(id)
-    db.run(`UPDATE projects SET ${updates.join(', ')} WHERE id = ?`, values)
+    await db.execute({ sql: `UPDATE projects SET ${updates.join(', ')} WHERE id = ?`, args: values })
   }
 
   if (Array.isArray(req.body.features)) {
-    db.run(`DELETE FROM project_features WHERE project_id = ?`, [id])
-    req.body.features.forEach((f: string, j: number) =>
-      db.run(`INSERT INTO project_features (project_id, text, sort_order) VALUES (?, ?, ?)`, [id, f, j]))
+    await db.execute({ sql: `DELETE FROM project_features WHERE project_id = ?`, args: [id] })
+    for (let j = 0; j < req.body.features.length; j++) {
+      await db.execute({
+        sql: `INSERT INTO project_features (project_id, text, sort_order) VALUES (?, ?, ?)`,
+        args: [id, req.body.features[j], j]
+      })
+    }
   }
 
   if (Array.isArray(req.body.tech)) {
-    db.run(`DELETE FROM project_tech WHERE project_id = ?`, [id])
-    req.body.tech.forEach((t: string) =>
-      db.run(`INSERT INTO project_tech (project_id, name) VALUES (?, ?)`, [id, t]))
+    await db.execute({ sql: `DELETE FROM project_tech WHERE project_id = ?`, args: [id] })
+    for (const t of req.body.tech) {
+      await db.execute({
+        sql: `INSERT INTO project_tech (project_id, name) VALUES (?, ?)`,
+        args: [id, t]
+      })
+    }
   }
 
-  saveDb()
   res.json({ ok: true })
 })
 
@@ -132,62 +135,52 @@ router.post('/:id/upload-image', requireAuth, projectUpload.single('image'), asy
   if (!req.file) return res.status(400).json({ error: 'No image file uploaded' })
 
   const { id } = req.params
-  const db = await getDb()
+  const db = getDb()
 
   // Delete old image if exists
-  const existing = db.exec(`SELECT hero_image_path FROM projects WHERE id = ?`, [id])
-  if (existing[0]?.values[0]?.[0]) {
-    const oldFilename = existing[0].values[0][0] as string
-    if (oldFilename) {
-      const oldPath = path.join(PROJECT_IMG_DIR, oldFilename)
-      if (fs.existsSync(oldPath)) {
-        try { fs.unlinkSync(oldPath) } catch (_) {}
-      }
+  const existing = await db.execute({ sql: `SELECT hero_image_path FROM projects WHERE id = ?`, args: [id] })
+  const oldFilename = existing.rows[0]?.hero_image_path as string | null
+  if (oldFilename) {
+    const oldPath = path.join(PROJECT_IMG_DIR, oldFilename)
+    if (fs.existsSync(oldPath)) {
+      try { fs.unlinkSync(oldPath) } catch (_) {}
     }
   }
 
-  db.run(`UPDATE projects SET hero_image_path = ? WHERE id = ?`, [req.file.filename, id])
-  saveDb()
+  await db.execute({ sql: `UPDATE projects SET hero_image_path = ? WHERE id = ?`, args: [req.file.filename, id] })
   res.json({ ok: true, path: req.file.filename })
 })
 
 // DELETE /api/projects/:id/image — admin
 router.delete('/:id/image', requireAuth, async (req, res) => {
   const { id } = req.params
-  const db = await getDb()
+  const db = getDb()
 
-  const existing = db.exec(`SELECT hero_image_path FROM projects WHERE id = ?`, [id])
-  if (existing[0]?.values[0]?.[0]) {
-    const filename = existing[0].values[0][0] as string
-    if (filename) {
-      const filePath = path.join(PROJECT_IMG_DIR, filename)
-      if (fs.existsSync(filePath)) {
-        try { fs.unlinkSync(filePath) } catch (_) {}
-      }
+  const existing = await db.execute({ sql: `SELECT hero_image_path FROM projects WHERE id = ?`, args: [id] })
+  const filename = existing.rows[0]?.hero_image_path as string | null
+  if (filename) {
+    const filePath = path.join(PROJECT_IMG_DIR, filename)
+    if (fs.existsSync(filePath)) {
+      try { fs.unlinkSync(filePath) } catch (_) {}
     }
   }
 
-  db.run(`UPDATE projects SET hero_image_path = '' WHERE id = ?`, [id])
-  saveDb()
+  await db.execute({ sql: `UPDATE projects SET hero_image_path = '' WHERE id = ?`, args: [id] })
   res.json({ ok: true })
 })
 
 // DELETE /api/projects/:id — admin
 router.delete('/:id', requireAuth, async (req, res) => {
-  const db = await getDb()
-  // Also clean up image if exists
-  const existing = db.exec(`SELECT hero_image_path FROM projects WHERE id = ?`, [req.params.id])
-  if (existing[0]?.values[0]?.[0]) {
-    const filename = existing[0].values[0][0] as string
-    if (filename) {
-      const filePath = path.join(PROJECT_IMG_DIR, filename)
-      if (fs.existsSync(filePath)) {
-        try { fs.unlinkSync(filePath) } catch (_) {}
-      }
+  const db = getDb()
+  const existing = await db.execute({ sql: `SELECT hero_image_path FROM projects WHERE id = ?`, args: [req.params.id] })
+  const filename = existing.rows[0]?.hero_image_path as string | null
+  if (filename) {
+    const filePath = path.join(PROJECT_IMG_DIR, filename)
+    if (fs.existsSync(filePath)) {
+      try { fs.unlinkSync(filePath) } catch (_) {}
     }
   }
-  db.run(`DELETE FROM projects WHERE id = ?`, [req.params.id])
-  saveDb()
+  await db.execute({ sql: `DELETE FROM projects WHERE id = ?`, args: [req.params.id] })
   res.json({ ok: true })
 })
 

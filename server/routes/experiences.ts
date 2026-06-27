@@ -1,37 +1,25 @@
 import { Router } from 'express'
-import { getDb, saveDb } from '../db.js'
+import { getDb } from '../db.js'
 import { requireAuth } from './auth.js'
 
 const router = Router()
 
-function rowToObj(cols: string[], row: any[]) {
-  return Object.fromEntries(cols.map((c, i) => [c, row[i]]))
-}
-
 // GET /api/experiences — public
 router.get('/', async (_req, res) => {
-  const db = await getDb()
-  const exps = db.exec(`SELECT * FROM experiences ORDER BY sort_order ASC`)
-  const resps = db.exec(`SELECT * FROM experience_responsibilities ORDER BY experience_id, sort_order ASC`)
-  const techs = db.exec(`SELECT * FROM experience_tech ORDER BY experience_id ASC`)
+  const db = getDb()
+  const exps = await db.execute(`SELECT * FROM experiences ORDER BY sort_order ASC`)
+  const resps = await db.execute(`SELECT * FROM experience_responsibilities ORDER BY experience_id, sort_order ASC`)
+  const techs = await db.execute(`SELECT * FROM experience_tech ORDER BY experience_id ASC`)
 
-  if (!exps[0]) return res.json([])
-
-  const expCols = exps[0].columns
-  const respCols = resps[0]?.columns || []
-  const techCols = techs[0]?.columns || []
-  const respRows = resps[0]?.values || []
-  const techRows = techs[0]?.values || []
-
-  const result = exps[0].values.map(row => {
-    const exp = rowToObj(expCols, row) as any
-    exp.responsibilities = respRows
-      .filter(r => r[respCols.indexOf('experience_id')] === exp.id)
-      .map(r => rowToObj(respCols, r))
-    exp.tech = techRows
-      .filter(t => t[techCols.indexOf('experience_id')] === exp.id)
-      .map(t => t[techCols.indexOf('name')])
-    return exp
+  const result = exps.rows.map(exp => {
+    const e = { ...exp } as any
+    e.responsibilities = resps.rows
+      .filter(r => r.experience_id === exp.id)
+      .map(r => ({ ...r }))
+    e.tech = techs.rows
+      .filter(t => t.experience_id === exp.id)
+      .map(t => t.name)
+    return e
   })
 
   res.json(result)
@@ -42,23 +30,31 @@ router.post('/', requireAuth, async (req, res) => {
   const { company, role, client, start_date, end_date, location, is_current, sort_order, responsibilities, tech } = req.body
   if (!company || !role || !start_date) return res.status(400).json({ error: 'company, role, start_date required' })
 
-  const db = await getDb()
-  db.run(
-    `INSERT INTO experiences (company, role, client, start_date, end_date, location, is_current, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-    [company, role, client || '', start_date, end_date || '', location || '', is_current ? 1 : 0, sort_order || 0]
-  )
-  const expId = (db.exec(`SELECT last_insert_rowid() as id`)[0].values[0][0]) as number
+  const db = getDb()
+  await db.execute({
+    sql: `INSERT INTO experiences (company, role, client, start_date, end_date, location, is_current, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    args: [company, role, client || '', start_date, end_date || '', location || '', is_current ? 1 : 0, sort_order || 0]
+  })
+  const idResult = await db.execute(`SELECT last_insert_rowid() as id`)
+  const expId = idResult.rows[0].id as number
 
   if (Array.isArray(responsibilities)) {
-    responsibilities.forEach((r: string, j: number) =>
-      db.run(`INSERT INTO experience_responsibilities (experience_id, text, sort_order) VALUES (?, ?, ?)`, [expId, r, j]))
+    for (let j = 0; j < responsibilities.length; j++) {
+      await db.execute({
+        sql: `INSERT INTO experience_responsibilities (experience_id, text, sort_order) VALUES (?, ?, ?)`,
+        args: [expId, responsibilities[j], j]
+      })
+    }
   }
   if (Array.isArray(tech)) {
-    tech.forEach((t: string) =>
-      db.run(`INSERT INTO experience_tech (experience_id, name) VALUES (?, ?)`, [expId, t]))
+    for (const t of tech) {
+      await db.execute({
+        sql: `INSERT INTO experience_tech (experience_id, name) VALUES (?, ?)`,
+        args: [expId, t]
+      })
+    }
   }
 
-  saveDb()
   res.status(201).json({ ok: true, id: expId })
 })
 
@@ -76,36 +72,42 @@ router.patch('/:id', requireAuth, async (req, res) => {
     }
   }
 
-  const db = await getDb()
+  const db = getDb()
 
   if (updates.length) {
     values.push(id)
-    db.run(`UPDATE experiences SET ${updates.join(', ')} WHERE id = ?`, values)
+    await db.execute({ sql: `UPDATE experiences SET ${updates.join(', ')} WHERE id = ?`, args: values })
   }
 
   // Replace responsibilities if provided
   if (Array.isArray(req.body.responsibilities)) {
-    db.run(`DELETE FROM experience_responsibilities WHERE experience_id = ?`, [id])
-    req.body.responsibilities.forEach((r: string, j: number) =>
-      db.run(`INSERT INTO experience_responsibilities (experience_id, text, sort_order) VALUES (?, ?, ?)`, [id, r, j]))
+    await db.execute({ sql: `DELETE FROM experience_responsibilities WHERE experience_id = ?`, args: [id] })
+    for (let j = 0; j < req.body.responsibilities.length; j++) {
+      await db.execute({
+        sql: `INSERT INTO experience_responsibilities (experience_id, text, sort_order) VALUES (?, ?, ?)`,
+        args: [id, req.body.responsibilities[j], j]
+      })
+    }
   }
 
   // Replace tech if provided
   if (Array.isArray(req.body.tech)) {
-    db.run(`DELETE FROM experience_tech WHERE experience_id = ?`, [id])
-    req.body.tech.forEach((t: string) =>
-      db.run(`INSERT INTO experience_tech (experience_id, name) VALUES (?, ?)`, [id, t]))
+    await db.execute({ sql: `DELETE FROM experience_tech WHERE experience_id = ?`, args: [id] })
+    for (const t of req.body.tech) {
+      await db.execute({
+        sql: `INSERT INTO experience_tech (experience_id, name) VALUES (?, ?)`,
+        args: [id, t]
+      })
+    }
   }
 
-  saveDb()
   res.json({ ok: true })
 })
 
 // DELETE /api/experiences/:id — admin
 router.delete('/:id', requireAuth, async (req, res) => {
-  const db = await getDb()
-  db.run(`DELETE FROM experiences WHERE id = ?`, [req.params.id])
-  saveDb()
+  const db = getDb()
+  await db.execute({ sql: `DELETE FROM experiences WHERE id = ?`, args: [req.params.id] })
   res.json({ ok: true })
 })
 

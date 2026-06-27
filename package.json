@@ -12,6 +12,7 @@
     "start": "NODE_ENV=production tsx server/index.ts"
   },
   "dependencies": {
+    "@libsql/client": "^0.17.4",
     "@lucide/vue": "^1.21.0",
     "@vueuse/core": "^11.0.0",
     "axios": "^1.7.0",
@@ -20,7 +21,6 @@
     "express": "^4.19.0",
     "multer": "^2.0.0",
     "pinia": "^2.2.0",
-    "sql.js": "^1.12.0",
     "vue": "^3.5.0",
     "vue-router": "^4.4.0"
   },
@@ -30,7 +30,6 @@
     "@types/express": "^5.0.0",
     "@types/multer": "^1.4.0",
     "@types/node": "^22.0.0",
-    "@types/sql.js": "^1.4.0",
     "@vitejs/plugin-vue": "^5.1.0",
     "autoprefixer": "^10.4.0",
     "concurrently": "^9.0.0",
