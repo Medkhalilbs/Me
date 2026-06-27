@@ -123,18 +123,29 @@ router.patch('/:id', requireAuth, async (req, res) => {
 
 // POST /api/projects/:id/upload-image — admin
 router.post('/:id/upload-image', requireAuth, projectUpload.single('image'), async (req, res) => {
-  if (!req.file) return res.status(400).json({ error: 'No image file uploaded' })
+  console.log('--- Project Upload Debug ---')
+  console.log('req.file:', req.file ? JSON.stringify(req.file) : 'No file received')
+  console.log('req.params.id:', req.params.id)
 
-  const { id } = req.params
-  const db = getDb()
+  try {
+    if (!req.file) return res.status(400).json({ error: 'No image file uploaded' })
 
-  // Delete old image from Cloudinary if exists
-  const existing = await db.execute({ sql: `SELECT hero_image_path FROM projects WHERE id = ?`, args: [id] })
-  await deleteCloudinaryImage(existing.rows[0]?.hero_image_path as string | null)
+    const { id } = req.params
+    const db = getDb()
 
-  // req.file.path = full Cloudinary URL
-  await db.execute({ sql: `UPDATE projects SET hero_image_path = ? WHERE id = ?`, args: [req.file.path, id] })
-  res.json({ ok: true, path: req.file.path })
+    // Delete old image from Cloudinary if exists
+    const existing = await db.execute({ sql: `SELECT hero_image_path FROM projects WHERE id = ?`, args: [id] })
+    await deleteCloudinaryImage(existing.rows[0]?.hero_image_path as string | null)
+
+    // req.file.path = full Cloudinary URL
+    await db.execute({ sql: `UPDATE projects SET hero_image_path = ? WHERE id = ?`, args: [req.file.path, id] })
+    res.json({ ok: true, path: req.file.path })
+  } catch (err: any) {
+    console.error('Project image upload handler error:', err)
+    res.status(500).json({
+      error: err instanceof Error ? err.message : String(err)
+    })
+  }
 })
 
 // DELETE /api/projects/:id/image — admin
