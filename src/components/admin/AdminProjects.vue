@@ -346,10 +346,20 @@ async function handleProjectImageUpload(e: Event) {
   formData.append('image', file)
 
   try {
-    const res = await api.post(`/projects/${editingId.value}/upload-image`, formData)
-    form.hero_image_path = res.data.path
+    const token = localStorage.getItem('admin_token')
+    const res = await fetch(`/api/projects/${editingId.value}/upload-image`, {
+      method: 'POST',
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      body: formData,
+      credentials: 'include',
+    })
+    const data = await res.json()
+    if (!res.ok) {
+      throw new Error(data.error || 'Cover image upload failed')
+    }
+    form.hero_image_path = data.path
   } catch (err: any) {
-    error.value = err.response?.data?.error || 'Cover image upload failed'
+    error.value = err.message || 'Cover image upload failed'
   } finally {
     uploadingImage.value = false
   }
