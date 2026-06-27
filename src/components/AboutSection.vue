@@ -11,7 +11,7 @@
         <div class="about-left reveal">
           <!-- Profile image card -->
           <div class="profile-image-card">
-            <img v-if="profile?.profile_image_path" :src="`/api/images/profile/${profile.profile_image_path}`" alt="Mohamed Khalil" class="about-profile-img" />
+            <img v-if="profile?.profile_image_path" :src="profile.profile_image_path" alt="Mohamed Khalil" class="about-profile-img" />
             <div v-else class="profile-image-placeholder">
               <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="var(--accent-navy)" stroke-width="1.5">
                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>

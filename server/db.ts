@@ -14,9 +14,6 @@ export function getDb(): Client {
   return client
 }
 
-// No-op kept for backward compatibility — Turso persists automatically
-export function saveDb(): void {}
-
 export async function initSchema(): Promise<void> {
   const db = getDb()
 

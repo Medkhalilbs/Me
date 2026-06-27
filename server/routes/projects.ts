@@ -1,39 +1,30 @@
 import { Router } from 'express'
 import multer from 'multer'
-import path from 'path'
-import fs from 'fs'
-import { fileURLToPath } from 'url'
+import { CloudinaryStorage } from 'multer-storage-cloudinary'
+import cloudinary from '../cloudinary.js'
 import { getDb } from '../db.js'
 import { requireAuth } from './auth.js'
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
-const PROJECT_IMG_DIR = path.resolve(__dirname, '../../data/images/projects')
-
-if (!fs.existsSync(PROJECT_IMG_DIR)) {
-  fs.mkdirSync(PROJECT_IMG_DIR, { recursive: true })
-}
-
-const projectStorage = multer.diskStorage({
-  destination: (_req, _file, cb) => cb(null, PROJECT_IMG_DIR),
-  filename: (_req, file, cb) => {
-    const ext = path.extname(file.originalname)
-    cb(null, `project_${Date.now()}${ext}`)
-  },
+const projectStorage = new CloudinaryStorage({
+  cloudinary,
+  params: {
+    folder: 'portfolio/projects',
+    allowed_formats: ['jpg', 'jpeg', 'png', 'webp', 'avif'],
+  } as any,
 })
 
-const projectUpload = multer({
-  storage: projectStorage,
-  fileFilter: (_req, file, cb) => {
-    if (['image/jpeg', 'image/png', 'image/webp', 'image/avif'].includes(file.mimetype)) {
-      cb(null, true)
-    } else {
-      cb(new Error('Only JPEG, PNG, WebP, AVIF allowed'))
-    }
-  },
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
-})
+const projectUpload = multer({ storage: projectStorage })
 
 const router = Router()
+
+// Helper: delete a Cloudinary image by its stored URL
+async function deleteCloudinaryImage(url: string | null): Promise<void> {
+  if (!url) return
+  try {
+    const match = url.match(/\/upload\/(?:v\d+\/)?(.+)\.[^.]+$/)
+    if (match) await cloudinary.uploader.destroy(match[1])
+  } catch (_) {}
+}
 
 // GET /api/projects — public
 router.get('/', async (_req, res) => {
@@ -137,18 +128,13 @@ router.post('/:id/upload-image', requireAuth, projectUpload.single('image'), asy
   const { id } = req.params
   const db = getDb()
 
-  // Delete old image if exists
+  // Delete old image from Cloudinary if exists
   const existing = await db.execute({ sql: `SELECT hero_image_path FROM projects WHERE id = ?`, args: [id] })
-  const oldFilename = existing.rows[0]?.hero_image_path as string | null
-  if (oldFilename) {
-    const oldPath = path.join(PROJECT_IMG_DIR, oldFilename)
-    if (fs.existsSync(oldPath)) {
-      try { fs.unlinkSync(oldPath) } catch (_) {}
-    }
-  }
+  await deleteCloudinaryImage(existing.rows[0]?.hero_image_path as string | null)
 
-  await db.execute({ sql: `UPDATE projects SET hero_image_path = ? WHERE id = ?`, args: [req.file.filename, id] })
-  res.json({ ok: true, path: req.file.filename })
+  // req.file.path = full Cloudinary URL
+  await db.execute({ sql: `UPDATE projects SET hero_image_path = ? WHERE id = ?`, args: [req.file.path, id] })
+  res.json({ ok: true, path: req.file.path })
 })
 
 // DELETE /api/projects/:id/image — admin
@@ -157,13 +143,7 @@ router.delete('/:id/image', requireAuth, async (req, res) => {
   const db = getDb()
 
   const existing = await db.execute({ sql: `SELECT hero_image_path FROM projects WHERE id = ?`, args: [id] })
-  const filename = existing.rows[0]?.hero_image_path as string | null
-  if (filename) {
-    const filePath = path.join(PROJECT_IMG_DIR, filename)
-    if (fs.existsSync(filePath)) {
-      try { fs.unlinkSync(filePath) } catch (_) {}
-    }
-  }
+  await deleteCloudinaryImage(existing.rows[0]?.hero_image_path as string | null)
 
   await db.execute({ sql: `UPDATE projects SET hero_image_path = '' WHERE id = ?`, args: [id] })
   res.json({ ok: true })
@@ -173,13 +153,8 @@ router.delete('/:id/image', requireAuth, async (req, res) => {
 router.delete('/:id', requireAuth, async (req, res) => {
   const db = getDb()
   const existing = await db.execute({ sql: `SELECT hero_image_path FROM projects WHERE id = ?`, args: [req.params.id] })
-  const filename = existing.rows[0]?.hero_image_path as string | null
-  if (filename) {
-    const filePath = path.join(PROJECT_IMG_DIR, filename)
-    if (fs.existsSync(filePath)) {
-      try { fs.unlinkSync(filePath) } catch (_) {}
-    }
-  }
+  await deleteCloudinaryImage(existing.rows[0]?.hero_image_path as string | null)
+
   await db.execute({ sql: `DELETE FROM projects WHERE id = ?`, args: [req.params.id] })
   res.json({ ok: true })
 })

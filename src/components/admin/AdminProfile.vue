@@ -10,7 +10,7 @@
         <h3 class="form-section-title">Profile Photo</h3>
         <div class="profile-image-upload-wrapper">
           <div v-if="form.profile_image_path" class="current-profile-preview">
-            <img :src="`/api/images/profile/${form.profile_image_path}`" alt="Profile Preview" class="admin-profile-img" />
+            <img :src="form.profile_image_path" alt="Profile Preview" class="admin-profile-img" />
             <button type="button" @click="deleteImage" class="btn btn-outline btn-sm danger">🗑️ Delete Photo</button>
           </div>
           <div v-else class="upload-placeholder">
