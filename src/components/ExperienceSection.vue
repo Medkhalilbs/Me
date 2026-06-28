@@ -2,9 +2,9 @@
   <section id="experience" class="section">
     <div class="section-number"></div>
     <div class="container">
-      <div class="section-badge reveal">// 03 — EXPERIENCE</div>
-      <h2 class="section-title reveal">Career Trajectory</h2>
-      <p class="section-subtitle reveal">Professional chronicle of full-stack engineering and embedded designs</p>
+      <div class="section-badge reveal">{{ meta.badge || '// 03 — EXPERIENCE' }}</div>
+      <h2 class="section-title reveal">{{ meta.title || 'Career Trajectory' }}</h2>
+      <p class="section-subtitle reveal">{{ meta.subtitle || 'Professional chronicle of full-stack engineering and embedded designs' }}</p>
 
       <div class="exp-timeline">
         <div
@@ -74,8 +74,12 @@
 </template>
 
 <script setup lang="ts">
-import type { Experience } from '@/types'
-defineProps<{ experiences: Experience[] }>()
+import { computed } from 'vue'
+import { usePortfolioStore } from '@/stores/portfolioStore'
+
+const store = usePortfolioStore()
+const experiences = computed(() => store.experiences)
+const meta = computed(() => store.getSectionMeta('experience'))
 </script>
 
 <style scoped>

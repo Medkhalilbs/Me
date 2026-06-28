@@ -4,7 +4,7 @@ import api from '@/api'
 import type {
   Profile, HeroStat, SkillCategory, Experience,
   Project, Education, TechStackItem, WhyCard,
-  Certification, Testimonial, CV, Language, SectionSetting
+  Certification, CV, Language, SectionSetting
 } from '@/types'
 
 export const usePortfolioStore = defineStore('portfolio', () => {
@@ -17,7 +17,6 @@ export const usePortfolioStore = defineStore('portfolio', () => {
   const techStack = ref<TechStackItem[]>([])
   const whyCards = ref<WhyCard[]>([])
   const certifications = ref<Certification[]>([])
-  const testimonials = ref<Testimonial[]>([])
   const cvs = ref<CV[]>([])
   const languages = ref<Language[]>([])
   const sectionSettings = ref<SectionSetting[]>([])
@@ -30,7 +29,7 @@ export const usePortfolioStore = defineStore('portfolio', () => {
     try {
       const [
         profileRes, statsRes, skillsRes, expRes, projRes,
-        eduRes, techRes, whyRes, certRes, testRes, cvsRes,
+        eduRes, techRes, whyRes, certRes, cvsRes,
         langRes, sectRes
       ] = await Promise.all([
         api.get('/profile'),
@@ -42,7 +41,6 @@ export const usePortfolioStore = defineStore('portfolio', () => {
         api.get('/tech-stack'),
         api.get('/why-work-with-me'),
         api.get('/certifications'),
-        api.get('/testimonials'),
         api.get('/cvs'),
         api.get('/languages'),
         api.get('/sections'),
@@ -57,7 +55,6 @@ export const usePortfolioStore = defineStore('portfolio', () => {
       techStack.value = techRes.data
       whyCards.value = whyRes.data
       certifications.value = certRes.data
-      testimonials.value = testRes.data
       cvs.value = cvsRes.data
       languages.value = langRes.data
       sectionSettings.value = sectRes.data
@@ -79,11 +76,20 @@ export const usePortfolioStore = defineStore('portfolio', () => {
     return s ? s.is_visible === 1 : true
   }
 
+  function getSectionMeta(key: string): { badge: string | null; title: string | null; subtitle: string | null } {
+    const s = sectionSettings.value.find(s => s.section_key === key)
+    return {
+      badge: s?.section_badge ?? null,
+      title: s?.section_title ?? null,
+      subtitle: s?.section_subtitle ?? null,
+    }
+  }
+
   return {
     profile, heroStats, skills, experiences, projects,
-    education, techStack, whyCards, certifications, testimonials, cvs,
+    education, techStack, whyCards, certifications, cvs,
     languages, sectionSettings,
     loading, error,
-    fetchAll, isSectionVisible
+    fetchAll, isSectionVisible, getSectionMeta
   }
 })

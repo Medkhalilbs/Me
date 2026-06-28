@@ -2,9 +2,9 @@
   <section id="education" class="section">
     <div class="section-number"></div>
     <div class="container">
-      <div class="section-badge reveal">// 05 — EDUCATION</div>
-      <h2 class="section-title reveal">Academic Background</h2>
-      <p class="section-subtitle reveal">Foundational systems training and computing credentials</p>
+      <div class="section-badge reveal">{{ meta.badge || '// 05 — EDUCATION' }}</div>
+      <h2 class="section-title reveal">{{ meta.title || 'Academic Background' }}</h2>
+      <p class="section-subtitle reveal">{{ meta.subtitle || 'Foundational systems training and computing credentials' }}</p>
 
       <div class="education-grid">
         <div
@@ -30,8 +30,12 @@
 </template>
 
 <script setup lang="ts">
-import type { Education } from '@/types'
-defineProps<{ education: Education[] }>()
+import { computed } from 'vue'
+import { usePortfolioStore } from '@/stores/portfolioStore'
+
+const store = usePortfolioStore()
+const education = computed(() => store.education)
+const meta = computed(() => store.getSectionMeta('education'))
 </script>
 
 <style scoped>

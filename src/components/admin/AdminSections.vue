@@ -1,7 +1,7 @@
 <template>
   <div class="admin-panel">
-    <h2 class="panel-title">⚙️ Section Visibility Settings</h2>
-    <p class="panel-sub">Toggle which sections of your public portfolio are visible to visitors.</p>
+    <h2 class="panel-title">⚙️ Section Settings</h2>
+    <p class="panel-sub">Toggle section visibility and customize their headings, subtitles, and badges.</p>
 
     <!-- Error state -->
     <div v-if="error" class="error-banner">
@@ -14,26 +14,55 @@
 
     <!-- Main Content -->
     <div v-else class="sections-list">
-      <div v-for="sec in sections" :key="sec.id" class="card section-card-row">
-        <div class="section-info">
-          <h4 class="section-display-name">{{ getSectionLabel(sec.section_key) }}</h4>
-          <p class="section-desc">{{ getSectionDescription(sec.section_key) }}</p>
-          <span class="section-key-tag">key: {{ sec.section_key }}</span>
+      <div v-for="sec in sections" :key="sec.id" class="card section-card-row-stack">
+        <div class="section-header-row">
+          <div class="section-info">
+            <h4 class="section-display-name">{{ getSectionLabel(sec.section_key) }}</h4>
+            <p class="section-desc">{{ getSectionDescription(sec.section_key) }}</p>
+            <span class="section-key-tag">key: {{ sec.section_key }}</span>
+          </div>
+
+          <div class="section-toggle-area">
+            <label class="switch">
+              <input
+                type="checkbox"
+                :checked="sec.is_visible === 1"
+                @change="toggleVisibility(sec, $event)"
+                :disabled="updatingKey === sec.section_key"
+              />
+              <span class="slider round"></span>
+            </label>
+            <span class="toggle-status-text" :class="{ visible: sec.is_visible === 1 }">
+              {{ sec.is_visible === 1 ? 'Visible' : 'Hidden' }}
+            </span>
+          </div>
         </div>
 
-        <div class="section-toggle-area">
-          <label class="switch">
-            <input
-              type="checkbox"
-              :checked="sec.is_visible === 1"
-              @change="toggleVisibility(sec, $event)"
+        <!-- Overrides form -->
+        <div class="section-overrides-form">
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label-sm">Badge Text</label>
+              <input v-model="sec.section_badge" class="form-input-sm" placeholder="e.g. // 04 — PROJECTS" />
+            </div>
+            <div class="form-group">
+              <label class="form-label-sm">Heading Title</label>
+              <input v-model="sec.section_title" class="form-input-sm" placeholder="e.g. Featured Work" />
+            </div>
+          </div>
+          <div class="form-group" style="margin-top: 0.5rem;">
+            <label class="form-label-sm">Subheading Description</label>
+            <input v-model="sec.section_subtitle" class="form-input-sm" placeholder="e.g. Case studies of enterprise platforms..." />
+          </div>
+          <div class="overrides-actions">
+            <button
+              class="btn btn-outline btn-sm"
+              @click="saveOverrides(sec)"
               :disabled="updatingKey === sec.section_key"
-            />
-            <span class="slider round"></span>
-          </label>
-          <span class="toggle-status-text" :class="{ visible: sec.is_visible === 1 }">
-            {{ sec.is_visible === 1 ? 'Visible' : 'Hidden' }}
-          </span>
+            >
+              {{ updatingKey === sec.section_key ? 'Saving…' : '💾 Save Section Metadata' }}
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -74,6 +103,21 @@ async function toggleVisibility(sec: SectionSetting, event: Event) {
   } catch (e: any) {
     target.checked = !target.checked // revert checkbox
     alert('Failed to update visibility setting.')
+  } finally {
+    updatingKey.value = null
+  }
+}
+
+async function saveOverrides(sec: SectionSetting) {
+  updatingKey.value = sec.section_key
+  try {
+    await api.patch(`/sections/${sec.section_key}`, {
+      section_badge: sec.section_badge || null,
+      section_title: sec.section_title || null,
+      section_subtitle: sec.section_subtitle || null
+    })
+  } catch (e: any) {
+    alert('Failed to save heading overrides.')
   } finally {
     updatingKey.value = null
   }
@@ -136,13 +180,67 @@ onMounted(load)
   max-width: 800px;
 }
 
-.section-card-row {
+.section-card-row-stack {
+  display: flex;
+  flex-direction: column;
+  padding: 1.5rem;
+  gap: 1.5rem;
+}
+
+.section-header-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1.5rem;
   gap: 2rem;
 }
+
+.section-overrides-form {
+  border-top: 1px solid var(--border);
+  padding-top: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.form-label-sm {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.form-input-sm {
+  padding: 0.5rem 0.75rem;
+  font-size: 0.85rem;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  border-radius: var(--radius-sm);
+  transition: all var(--transition);
+}
+
+.form-input-sm:focus {
+  border-color: var(--accent);
+  outline: none;
+}
+
+.overrides-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 0.5rem;
+}
+
 
 .section-info {
   display: flex;

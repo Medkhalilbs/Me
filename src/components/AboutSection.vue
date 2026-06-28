@@ -2,9 +2,9 @@
   <section id="about" class="section">
     <div class="section-number"></div>
     <div class="container">
-      <div class="section-badge reveal">// 01 — ABOUT</div>
-      <h2 class="section-title reveal">The Mind Behind the Code</h2>
-      <p class="section-subtitle reveal">Full-stack software engineer with roots in hardware systems</p>
+      <div class="section-badge reveal">{{ meta.badge || '// 01 — ABOUT' }}</div>
+      <h2 class="section-title reveal">{{ meta.title || 'The Mind Behind the Code' }}</h2>
+      <p class="section-subtitle reveal">{{ meta.subtitle || 'Full-stack software engineer with roots in hardware systems' }}</p>
 
       <div class="about-layout-grid">
         <!-- Left: Profile card & status & languages -->
@@ -21,11 +21,11 @@
           </div>
 
           <!-- Available for work badge (bronze) -->
-          <div class="status-badge-container">          
-            <span class="status-text">{{ profile?.hero_badge  }}</span>
+          <div class="status-badge-container" v-if="profile?.hero_badge">          
+            <span class="status-text">{{ profile.hero_badge }}</span>
           </div>
 
- 
+
         </div>
 
         <!-- Right: Bio & fact cards -->
@@ -122,40 +122,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
-import type { Profile } from '@/types'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { usePortfolioStore } from '@/stores/portfolioStore'
-import {Language} from '@/types'
-
-defineProps<{
-  profile: Profile | null,
-  languages: Language[]
-}>()
-
-
-function getProficiencyPct(prof: string): number {
-  switch (prof) {
-    case 'native': return 100
-    case 'fluent': return 90
-    case 'professional': return 75
-    case 'intermediate': return 55
-    case 'basic': return 35
-    default: return 50
-  }
-}
-
-function formatProficiency(prof: string): string {
-  switch (prof) {
-    case 'native': return 'Native Speaker'
-    case 'fluent': return 'Fluent'
-    case 'professional': return 'Professional Working'
-    case 'intermediate': return 'Intermediate'
-    case 'basic': return 'Elementary'
-    default: return prof.charAt(0).toUpperCase() + prof.slice(1)
-  }
-}
+import { getProficiencyPct, formatProficiency } from '@/utils/proficiency'
 
 const store = usePortfolioStore()
+const profile = computed(() => store.profile)
+const languages = computed(() => store.languages)
+const meta = computed(() => store.getSectionMeta('about'))
 
 const animatedFacts = ref({
   exp: 0, projects: 0, tech: 0, languages: 0, certs: 0, companies: 0
@@ -171,7 +145,7 @@ const triggerCountUp = () => {
   // Get dynamic targets from store arrays/values
   const expTarget = parseInt(store.heroStats.find(s => s.label.toLowerCase().includes('experience'))?.value || '5') || 5
   const projectsTarget = store.projects.length || 20
-  const techTarget = store.techStack.length || 15
+  const techTarget = store.skills.reduce((sum, cat) => sum + cat.tags.length, 0) || 15
   const languagesTarget = store.languages.length || 3
   const certsTarget = store.certifications.length || 1
   const companiesTarget = new Set(store.experiences.map(e => e.company)).size || 4

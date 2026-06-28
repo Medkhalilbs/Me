@@ -2,9 +2,9 @@
   <section id="projects" class="section">
     <div class="section-number"></div>
     <div class="container">
-      <div class="section-badge reveal">// 04 — PROJECTS</div>
-      <h2 class="section-title reveal">Featured Work</h2>
-      <p class="section-subtitle reveal">Deployments, security tooling, and automation pipelines built to scale</p>
+      <div class="section-badge reveal">{{ meta.badge || '// 04 — PROJECTS' }}</div>
+      <h2 class="section-title reveal">{{ meta.title || 'Featured Work' }}</h2>
+      <p class="section-subtitle reveal">{{ meta.subtitle || 'Deployments, security tooling, and automation pipelines built to scale' }}</p>
 
       <!-- Terminal Tab Filters -->
       <div class="project-filters reveal">
@@ -107,25 +107,25 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import type { Project } from '@/types'
+import { usePortfolioStore } from '@/stores/portfolioStore'
 
-const props = defineProps<{
-  projects: Project[]
-}>()
+const store = usePortfolioStore()
+const meta = computed(() => store.getSectionMeta('projects'))
 
 const activeFilter = ref('all')
 const expandedCards = ref<Record<number, boolean>>({})
 
-const filters = [
-  { label: 'All',        value: 'all' },
-  { label: 'Mobile',     value: 'mobile' },
-  { label: 'Web',        value: 'web' },
-  { label: 'Security',   value: 'security' },
-  { label: 'Automation', value: 'automation' },
-]
+// Dynamic filters built from actual project categories in DB
+const filters = computed(() => {
+  const cats = [...new Set(store.projects.map(p => p.category).filter(Boolean))]
+  return [
+    { label: 'All', value: 'all' },
+    ...cats.map(c => ({ label: c.charAt(0).toUpperCase() + c.slice(1), value: c }))
+  ]
+})
 
 const visibleProjects = computed(() => {
-  let list = props.projects
+  let list = store.projects
   if (activeFilter.value !== 'all') {
     list = list.filter(p => p.category === activeFilter.value)
   }

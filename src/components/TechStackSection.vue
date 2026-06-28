@@ -2,23 +2,23 @@
   <section id="tech-stack" class="section">
     <div class="section-number"></div>
     <div class="container">
-      <div class="section-badge reveal">// 06 — STACK</div>
-      <h2 class="section-title reveal">Technology Stack</h2>
-      <p class="section-subtitle reveal">Languages, frameworks, and infrastructure tools grouped by category</p>
+      <div class="section-badge reveal">{{ meta.badge || '// 06 — STACK' }}</div>
+      <h2 class="section-title reveal">{{ meta.title || 'Technology Stack' }}</h2>
+      <p class="section-subtitle reveal">{{ meta.subtitle || 'Languages, frameworks, and infrastructure tools grouped by category' }}</p>
 
       <!-- Category Groups Layout -->
       <div class="stack-categories-container reveal">
-        <div v-for="[groupName, items] in groupedStack" :key="groupName" class="stack-group">
+        <div v-for="group in groupedStack" :key="group.name" class="stack-group">
           <!-- Monospace Category Title -->
-          <div class="group-label">{{ groupName }}</div>
+          <div class="group-label">{{ group.name }}</div>
           <!-- Pills Container -->
           <div class="group-pills">
             <div
-              v-for="item in items"
-              :key="item.id"
+              v-for="item in group.items"
+              :key="item"
               class="tech-pill"
             >
-              <span class="tech-pill-text">{{ item.name }}</span>
+              <span class="tech-pill-text">{{ item }}</span>
             </div>
           </div>
         </div>
@@ -29,40 +29,17 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import type { TechStackItem } from '@/types'
+import { usePortfolioStore } from '@/stores/portfolioStore'
 
-const props = defineProps<{ techStack: TechStackItem[] }>()
+const store = usePortfolioStore()
+const meta = computed(() => store.getSectionMeta('tech-stack'))
 
-// Dynamically group database tech stack entries by domain
-const groupedStack = computed(() => {
-  const groups: Record<string, TechStackItem[]> = {
-    'Frontend': [],
-    'Backend': [],
-    'Database': [],
-    'DevOps & CI/CD': [],
-    'Cloud & Infrastructure': [],
-    'Management & Integration': []
-  }
-
-  props.techStack.forEach(item => {
-    const name = item.name.toLowerCase()
-    if (['vue', 'nuxt', 'react', 'typescript', 'javascript', 'css', 'tailwind', 'webpack', 'vite'].some(t => name.includes(t))) {
-      groups['Frontend'].push(item)
-    } else if (['spring', 'java', 'node', 'express', 'n8n', 'rest'].some(t => name.includes(t))) {
-      groups['Backend'].push(item)
-    } else if (['oracle', 'postgres', 'mongo', 'sql', 'pl/sql'].some(t => name.includes(t))) {
-      groups['Database'].push(item)
-    } else if (['docker', 'jenkins', 'git', 'sonar', 'jfrog', 'pm2', 'pipeline'].some(t => name.includes(t))) {
-      groups['DevOps & CI/CD'].push(item)
-    } else if (['aws', 'gcp', 'cloudflare'].some(t => name.includes(t))) {
-      groups['Cloud & Infrastructure'].push(item)
-    } else {
-      groups['Management & Integration'].push(item)
-    }
-  })
-
-  return Object.entries(groups).filter(([_, items]) => items.length > 0)
-})
+// Group by skill_categories + skill_tags (replaces keyword matching)
+const groupedStack = computed(() =>
+  store.skills
+    .filter(cat => cat.tags.length > 0)
+    .map(cat => ({ name: cat.name, items: cat.tags.map(t => t.name) }))
+)
 </script>
 
 <style scoped>

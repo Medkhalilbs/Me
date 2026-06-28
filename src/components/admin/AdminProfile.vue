@@ -73,6 +73,20 @@
       </div>
 
       <div class="form-section">
+        <h3 class="form-section-title">About Section Texts</h3>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">About Title Override</label>
+            <input v-model="form.about_title" class="form-input" placeholder="e.g. The Mind Behind the Code" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">About Subtitle Override</label>
+            <input v-model="form.about_subtitle" class="form-input" placeholder="e.g. Full-stack software engineer with roots in hardware systems" />
+          </div>
+        </div>
+      </div>
+
+      <div class="form-section">
         <h3 class="form-section-title">About Paragraphs</h3>
         <div v-for="(para, i) in form.about_paragraphs" :key="i" class="form-group" style="position:relative">
           <label class="form-label">Paragraph {{ i + 1 }}</label>
@@ -80,6 +94,22 @@
           <button type="button" class="remove-btn" @click="form.about_paragraphs.splice(i, 1)">✕</button>
         </div>
         <button type="button" class="btn btn-outline" @click="form.about_paragraphs.push('')" style="margin-top:0.5rem;">+ Add Paragraph</button>
+      </div>
+
+      <div class="form-section">
+        <h3 class="form-section-title">Contact Section Texts</h3>
+        <div class="form-group">
+          <label class="form-label">Contact Heading Override</label>
+          <input v-model="form.contact_heading" class="form-input" placeholder="e.g. Get In Touch" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Contact Subheading Override</label>
+          <input v-model="form.contact_subheading" class="form-input" placeholder="e.g. Available for remote contracts, IT consulting, and full-stack positions" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Contact Description</label>
+          <textarea v-model="form.contact_description" class="form-input" rows="3" placeholder="e.g. Have a project requirement..."></textarea>
+        </div>
       </div>
 
       <div class="form-section">
@@ -121,7 +151,9 @@ const form = reactive({
   hero_heading: '', hero_subtitle: '', hero_badge: '',
   about_paragraphs: [] as string[],
   callout_title: '', callout_text: '',
-  profile_image_path: null as string | null
+  profile_image_path: null as string | null,
+  about_title: '', about_subtitle: '',
+  contact_heading: '', contact_subheading: '', contact_description: ''
 })
 
 onMounted(async () => {

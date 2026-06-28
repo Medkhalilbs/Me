@@ -16,13 +16,13 @@
       </h1>
 
       <!-- Role title with blinking cursor -->
-      <p class="hero-title reveal">
-        <span>{{ profile?.title || 'Full Stack Software Engineer // 5 years experience' }}</span><span class="terminal-cursor">_</span>
+      <p class="hero-title reveal" v-if="profile?.title">
+        <span>{{ profile.title }}</span><span class="terminal-cursor">_</span>
       </p>
 
       <!-- Tagline -->
-      <p class="hero-subtitle reveal">
-        {{ profile?.hero_subtitle || 'From embedded systems to cloud architecture — building software at every layer.' }}
+      <p class="hero-subtitle reveal" v-if="profile?.hero_subtitle">
+        {{ profile.hero_subtitle }}
       </p>
 
       <!-- CTA buttons -->
@@ -81,32 +81,22 @@
 import { computed, onMounted } from 'vue'
 import { useParticles } from '@/composables/useParticles'
 import { useMouseGlow } from '@/composables/useMouseGlow'
-import type { Profile, HeroStat, CV } from '@/types'
+import { usePortfolioStore } from '@/stores/portfolioStore'
 
-const props = defineProps<{
-  profile: Profile | null
-  heroStats: HeroStat[]
-  cvs: CV[]
-}>()
-
-const defaultCv = computed(() => props.cvs.find(c => c.is_default) || props.cvs[0] || null)
+const store = usePortfolioStore()
+const profile = computed(() => store.profile)
+const defaultCv = computed(() => store.cvs.find(c => c.is_default) || store.cvs[0] || null)
 
 const firstName = computed(() => {
-  if (!props.profile?.name) return 'Mohamed Khalil'
-  const parts = props.profile.name.trim().split(/\s+/)
-  if (parts.length > 2) {
-    return parts.slice(0, 2).join(' ')
-  }
-  return parts[0] || 'Mohamed Khalil'
+  if (!profile.value?.name) return ''
+  const parts = profile.value.name.trim().split(/\s+/)
+  return parts.length > 2 ? parts.slice(0, 2).join(' ') : parts[0] || ''
 })
 
 const lastName = computed(() => {
-  if (!props.profile?.name) return 'Ben Sedrine'
-  const parts = props.profile.name.trim().split(/\s+/)
-  if (parts.length > 2) {
-    return parts.slice(2).join(' ')
-  }
-  return parts.slice(1).join(' ') || 'Ben Sedrine'
+  if (!profile.value?.name) return ''
+  const parts = profile.value.name.trim().split(/\s+/)
+  return parts.length > 2 ? parts.slice(2).join(' ') : parts.slice(1).join(' ') || ''
 })
 
 useParticles('particles-canvas')

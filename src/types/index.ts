@@ -16,6 +16,11 @@ export interface Profile {
   callout_text: string
   admin_secret_path?: string
   profile_image_path?: string | null
+  contact_heading?: string | null
+  contact_subheading?: string | null
+  contact_description?: string | null
+  about_title?: string | null
+  about_subtitle?: string | null
 }
 
 // ─── Hero Stats ───────────────────────────────────────────────────────────────
@@ -133,16 +138,6 @@ export interface Certification {
   is_hidden: 0 | 1
 }
 
-// ─── Testimonial ──────────────────────────────────────────────────────────────
-export interface Testimonial {
-  id: number
-  author_name: string
-  author_role: string
-  author_company: string
-  avatar_initials: string
-  text: string
-  sort_order: number
-}
 
 // ─── CV ───────────────────────────────────────────────────────────────────────
 export interface CV {
@@ -180,4 +175,7 @@ export interface SectionSetting {
   section_key: string
   is_visible: 0 | 1
   sort_order: number
+  section_title?: string | null
+  section_subtitle?: string | null
+  section_badge?: string | null
 }
