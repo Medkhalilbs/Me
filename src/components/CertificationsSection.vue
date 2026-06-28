@@ -2,9 +2,9 @@
   <section id="certifications" class="section">
     <div class="section-number"></div>
     <div class="container">
-      <div class="section-badge reveal">// 07 — CERTIFICATIONS</div>
-      <h2 class="section-title reveal">Credentials & Achievements</h2>
-      <p class="section-subtitle reveal">Verified cloud computing and enterprise consulting qualifications</p>
+      <div class="section-badge reveal">{{ meta.badge || '// 07 — CERTIFICATIONS' }}</div>
+      <h2 class="section-title reveal">{{ meta.title || 'Credentials & Achievements' }}</h2>
+      <p class="section-subtitle reveal">{{ meta.subtitle || 'Verified cloud computing and enterprise consulting qualifications' }}</p>
 
       <div class="cert-card-wrapper reveal">
         <!-- Render the single primary certification -->
@@ -53,9 +53,13 @@
 </template>
 
 <script setup lang="ts">
-import type { Certification } from '@/types'
+import { computed } from 'vue'
+import { usePortfolioStore } from '@/stores/portfolioStore'
 
-defineProps<{ certifications: Certification[] }>()
+const store = usePortfolioStore()
+const certifications = computed(() => store.certifications)
+const meta = computed(() => store.getSectionMeta('certifications'))
+
 
 function formatStatus(status?: string) {
   if (!status) return 'Active'

@@ -10,7 +10,7 @@
           <span class="logo-text">
             {{ logoInitials.first }}<span class="bs-accent">{{ logoInitials.second }}</span>
           </span>
-          <span class="footer-tagline">{{ profile?.title || 'From Silicon to Cloud' }}</span>
+          <span class="footer-tagline">{{ profile?.hero_badge || profile?.title }}</span>
         </div>
 
         <!-- Quick Links -->
@@ -22,13 +22,13 @@
 
         <!-- Social Icons -->
         <div class="footer-social-links">
-          <a :href="profile?.github_url || 'https://github.com/Medkhalilbs'" target="_blank" rel="noopener" class="social-icon-btn" aria-label="GitHub">
+          <a v-if="profile?.github_url" :href="profile.github_url" target="_blank" rel="noopener" class="social-icon-btn" aria-label="GitHub">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"/><path d="M9 18c-4.51 2-5-2-7-2"/></svg>
           </a>
-          <a :href="profile?.linkedin_url || 'https://linkedin.com/in/mk-bs'" target="_blank" rel="noopener" class="social-icon-btn" aria-label="LinkedIn">
+          <a v-if="profile?.linkedin_url" :href="profile.linkedin_url" target="_blank" rel="noopener" class="social-icon-btn" aria-label="LinkedIn">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
           </a>
-          <a :href="`mailto:${profile?.email || 'medkhalilbs@gmail.com'}`" class="social-icon-btn" aria-label="Email">
+          <a v-if="profile?.email" :href="`mailto:${profile.email}`" class="social-icon-btn" aria-label="Email">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
           </a>
         </div>
@@ -37,7 +37,7 @@
       <!-- Bottom Copyright line -->
       <div class="footer-bottom-row">
         <span class="copyright-text">
-          &copy; {{ new Date().getFullYear() }} {{ profile?.name || 'Mohamed Khalil Ben Sedrine' }}
+          &copy; {{ new Date().getFullYear() }}<span v-if="profile?.name"> {{ profile.name }}</span>
         </span>
       </div>
     </div>
@@ -46,28 +46,20 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import type { Profile } from '@/types'
+import { usePortfolioStore } from '@/stores/portfolioStore'
 
-const props = defineProps<{ profile: Profile | null }>()
+const store = usePortfolioStore()
+const profile = computed(() => store.profile)
 
 const logoInitials = computed(() => {
-  const name = props.profile?.name || 'Mohamed Khalil Ben Sedrine'
+  const name = profile.value?.name || ''
   const parts = name.trim().split(/\s+/)
   if (parts.length >= 4) {
-    return {
-      first: (parts[0]?.[0] || '') + (parts[1]?.[0] || ''),
-      second: (parts[2]?.[0] || '') + (parts[3]?.[0] || '')
-    }
+    return { first: (parts[0]?.[0] || '') + (parts[1]?.[0] || ''), second: (parts[2]?.[0] || '') + (parts[3]?.[0] || '') }
   } else if (parts.length === 3) {
-    return {
-      first: (parts[0]?.[0] || '') + (parts[1]?.[0] || ''),
-      second: parts[2]?.[0] || ''
-    }
+    return { first: (parts[0]?.[0] || '') + (parts[1]?.[0] || ''), second: parts[2]?.[0] || '' }
   } else if (parts.length === 2) {
-    return {
-      first: parts[0]?.[0] || '',
-      second: parts[1]?.[0] || ''
-    }
+    return { first: parts[0]?.[0] || '', second: parts[1]?.[0] || '' }
   }
   return { first: 'MK', second: 'BS' }
 })

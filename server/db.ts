@@ -675,3 +675,30 @@ async function seedData(): Promise<void> {
 
   console.log('✅ Database seeded with new portfolio data')
 }
+
+// ─── Safe ALTER helper (ignores duplicate-column errors) ──────────────────────
+async function safeAlter(sql: string): Promise<void> {
+  const db = getDb()
+  try {
+    await db.execute(sql)
+  } catch (e: any) {
+    const msg: string = e?.message ?? ''
+    if (msg.includes('duplicate column') || msg.includes('already exists')) return
+    throw e
+  }
+}
+
+// ─── Non-destructive column migrations (run every startup) ────────────────────
+export async function runMigrations(): Promise<void> {
+  // profile — content fields
+  await safeAlter(`ALTER TABLE profile ADD COLUMN contact_heading TEXT DEFAULT NULL`)
+  await safeAlter(`ALTER TABLE profile ADD COLUMN contact_subheading TEXT DEFAULT NULL`)
+  await safeAlter(`ALTER TABLE profile ADD COLUMN contact_description TEXT DEFAULT NULL`)
+  await safeAlter(`ALTER TABLE profile ADD COLUMN about_title TEXT DEFAULT NULL`)
+  await safeAlter(`ALTER TABLE profile ADD COLUMN about_subtitle TEXT DEFAULT NULL`)
+
+  // section_settings — editable heading metadata
+  await safeAlter(`ALTER TABLE section_settings ADD COLUMN section_title TEXT DEFAULT NULL`)
+  await safeAlter(`ALTER TABLE section_settings ADD COLUMN section_subtitle TEXT DEFAULT NULL`)
+  await safeAlter(`ALTER TABLE section_settings ADD COLUMN section_badge TEXT DEFAULT NULL`)
+}

@@ -6,50 +6,50 @@
     <!-- Scroll progress bar -->
     <div id="scroll-progress" :style="{ width: scrollPct + '%' }"></div>
 
-    <Navbar :theme="theme" :profile="store.profile" @toggle-theme="toggleTheme" @open-command="commandOpen = true" />
+    <Navbar :theme="theme" @toggle-theme="toggleTheme" @open-command="commandOpen = true" />
     <CommandPalette :open="commandOpen" @close="commandOpen = false" />
 
     <main v-if="!store.loading">
       <template v-if="store.isSectionVisible('hero')">
-        <HeroSection :profile="store.profile" :hero-stats="store.heroStats" :cvs="store.cvs" />
+        <HeroSection />
         <SectionDivider />
       </template>
       <template v-if="store.isSectionVisible('about')">
-        <AboutSection :profile="store.profile" :languages="store.languages" />
+        <AboutSection />
         <SectionDivider />
       </template>
       <template v-if="store.isSectionVisible('skills')">
-        <SkillsSection :skills="store.skills" />
+        <SkillsSection />
         <SectionDivider />
       </template>
       <template v-if="store.isSectionVisible('experience')">
-        <ExperienceSection :experiences="store.experiences" />
+        <ExperienceSection />
         <SectionDivider />
       </template>
       <template v-if="store.isSectionVisible('projects')">
-        <ProjectsSection :projects="store.projects" />
+        <ProjectsSection />
         <SectionDivider />
       </template>
       <template v-if="store.isSectionVisible('education')">
-        <EducationSection :education="store.education" />
+        <EducationSection />
         <SectionDivider />
       </template>
       <template v-if="store.isSectionVisible('tech-stack')">
-        <TechStackSection :tech-stack="store.techStack" />
+        <TechStackSection />
         <SectionDivider />
       </template>
       <template v-if="store.isSectionVisible('certifications')">
-        <CertificationsSection :certifications="store.certifications" />
+        <CertificationsSection />
         <SectionDivider />
       </template>
       <template v-if="store.isSectionVisible('why-work-with-me')">
-        <WhyWorkWithMe :why-cards="store.whyCards" />
+        <WhyWorkWithMe />
         <SectionDivider />
       </template>
       <template v-if="store.isSectionVisible('contact')">
-        <ContactSection :profile="store.profile" />
+        <ContactSection />
       </template>
-      <FooterComponent :profile="store.profile" />
+      <FooterComponent />
     </main>
 
     <!-- Loading state -->

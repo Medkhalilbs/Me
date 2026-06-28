@@ -14,7 +14,7 @@ router.get('/', async (_req, res) => {
 // PATCH /api/sections/:key — admin update by section_key
 router.patch('/:key', requireAuth, async (req, res) => {
   const { key } = req.params
-  const allowed = ['is_visible', 'sort_order']
+  const allowed = ['is_visible', 'sort_order', 'section_title', 'section_subtitle', 'section_badge']
   const updates: string[] = []
   const values: any[] = []
   for (const field of allowed) {

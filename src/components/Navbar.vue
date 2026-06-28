@@ -76,14 +76,13 @@ import { usePortfolioStore } from '@/stores/portfolioStore'
 
 const props = defineProps<{
   theme: string
-  profile: Profile | null
 }>()
 defineEmits(['toggle-theme', 'open-command'])
 
 const store = usePortfolioStore()
 
 const logoInitials = computed(() => {
-  const name = props.profile?.name || 'Mohamed Khalil Ben Sedrine'
+  const name = store.profile?.name || ''
   const parts = name.trim().split(/\s+/)
   if (parts.length >= 4) {
     return {

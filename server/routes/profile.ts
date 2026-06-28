@@ -23,7 +23,8 @@ const router = Router()
 router.get('/', async (_req, res) => {
   const db = getDb()
   const result = await db.execute(`SELECT id, name, title, location, email, phone, linkedin_url, github_url,
-    hero_heading, hero_subtitle, hero_badge, about_paragraphs, callout_title, callout_text, profile_image_path FROM profile WHERE id = 1`)
+    hero_heading, hero_subtitle, hero_badge, about_paragraphs, callout_title, callout_text, profile_image_path,
+    contact_heading, contact_subheading, contact_description, about_title, about_subtitle FROM profile WHERE id = 1`)
   if (!result.rows[0]) return res.status(404).json({ error: 'Not found' })
   const profile = { ...result.rows[0] } as any
   profile.about_paragraphs = JSON.parse(profile.about_paragraphs as string)
@@ -44,7 +45,8 @@ router.get('/check-path/:path', async (req, res) => {
 router.get('/admin', requireAuth, async (_req, res) => {
   const db = getDb()
   const result = await db.execute(`SELECT id, name, title, location, email, phone, linkedin_url, github_url,
-    hero_heading, hero_subtitle, hero_badge, about_paragraphs, callout_title, callout_text, admin_secret_path, profile_image_path FROM profile WHERE id = 1`)
+    hero_heading, hero_subtitle, hero_badge, about_paragraphs, callout_title, callout_text, admin_secret_path, profile_image_path,
+    contact_heading, contact_subheading, contact_description, about_title, about_subtitle FROM profile WHERE id = 1`)
   if (!result.rows[0]) return res.status(404).json({ error: 'Not found' })
   const profile = { ...result.rows[0] } as any
   profile.about_paragraphs = JSON.parse(profile.about_paragraphs as string)
@@ -115,7 +117,8 @@ router.delete('/image', requireAuth, async (_req, res) => {
 router.patch('/', requireAuth, async (req, res) => {
   const db = getDb()
   const allowed = ['name', 'title', 'location', 'email', 'phone', 'linkedin_url', 'github_url',
-    'hero_heading', 'hero_subtitle', 'hero_badge', 'about_paragraphs', 'callout_title', 'callout_text', 'admin_secret_path']
+    'hero_heading', 'hero_subtitle', 'hero_badge', 'about_paragraphs', 'callout_title', 'callout_text', 'admin_secret_path',
+    'contact_heading', 'contact_subheading', 'contact_description', 'about_title', 'about_subtitle']
 
   const updates: string[] = []
   const values: any[] = []

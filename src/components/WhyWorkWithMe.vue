@@ -2,9 +2,9 @@
   <section id="why-me" class="section">
     <div class="section-number"></div>
     <div class="container">
-      <div class="section-badge reveal">// 08 — WHY ME</div>
-      <h2 class="section-title reveal">Why Work With Me</h2>
-      <p class="section-subtitle reveal">Combining engineering precision with enterprise execution capability</p>
+      <div class="section-badge reveal">{{ meta.badge || '// 08 — WHY ME' }}</div>
+      <h2 class="section-title reveal">{{ meta.title || 'Why Work With Me' }}</h2>
+      <p class="section-subtitle reveal">{{ meta.subtitle || 'Combining engineering precision with enterprise execution capability' }}</p>
 
       <div class="why-grid">
         <div
@@ -31,9 +31,12 @@
 </template>
 
 <script setup lang="ts">
-import type { WhyCard } from '@/types'
+import { computed } from 'vue'
+import { usePortfolioStore } from '@/stores/portfolioStore'
 
-defineProps<{ whyCards: WhyCard[] }>()
+const store = usePortfolioStore()
+const whyCards = computed(() => store.whyCards)
+const meta = computed(() => store.getSectionMeta('why-me'))
 </script>
 
 <style scoped>

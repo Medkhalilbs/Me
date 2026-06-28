@@ -2,9 +2,9 @@
   <section id="skills" class="section">
     <div class="section-number"></div>
     <div class="container">
-      <div class="section-badge reveal">// 02 — SKILLS</div>
-      <h2 class="section-title reveal">Technical Arsenal</h2>
-      <p class="section-subtitle reveal">A system architecture view of my tools and capabilities</p>
+      <div class="section-badge reveal">{{ meta.badge || '// 02 — SKILLS' }}</div>
+      <h2 class="section-title reveal">{{ meta.title || 'Technical Arsenal' }}</h2>
+      <p class="section-subtitle reveal">{{ meta.subtitle || 'A system architecture view of my tools and capabilities' }}</p>
 
       <div class="skills-grid">
         <div
@@ -49,10 +49,13 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, onUnmounted } from 'vue'
-import type { SkillCategory } from '@/types'
+import { computed, onMounted, onUnmounted } from 'vue'
+import { usePortfolioStore } from '@/stores/portfolioStore'
 
-defineProps<{ skills: SkillCategory[] }>()
+const store = usePortfolioStore()
+const skills = computed(() => store.skills)
+const meta = computed(() => store.getSectionMeta('skills'))
+
 
 const bars: Array<{ el: HTMLElement; target: number }> = []
 let observer: IntersectionObserver
