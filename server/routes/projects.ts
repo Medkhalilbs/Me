@@ -15,7 +15,10 @@ const projectStorage = new CloudinaryStorage({
   } as any,
 })
 
-const projectUpload = multer({ storage: projectStorage })
+const projectUpload = multer({
+  storage: projectStorage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB max for images
+})
 
 const router = Router()
 

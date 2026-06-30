@@ -1,87 +1,94 @@
-# Mohamed Khalil Ben Sedrine — Full Stack Portfolio
+# Portfolio CV Template
 
-A dynamic, state-of-the-art developer portfolio web application built with **Vue 3**, **TypeScript**, **Vite**, **Tailwind CSS**, and **Express + SQLite** (sql.js). It features a fully functional, hidden admin dashboard to manage all sections without editing code.
+A customizable portfolio/CV website built with Vue 3, Express, Turso, and Cloudinary.
 
-## 🚀 Features
-
-- **Premium Design & Interactions**: Canvas particle system, mouse-tracking glow, smooth count-up metrics, responsive layouts, and interactive navigation.
-- **Dynamic Content**: Data-driven pages loading directly from a local SQLite database.
-- **Dynamic Section Visibility**: Toggle any portfolio section on/off. Hiding a section instantly removes it from the page flow and filters it out of the main navigation menu dynamically.
-- **Command Palette (⌘K / Ctrl+K)**: Instant keyboard-driven navigation and search.
-- **Dark/Light Mode**: Synced theme toggle with localStorage persistence.
-- **Advanced Admin Panel**: Hidden administrative gate to manage:
-  - Profile & Hero statements with image upload/deletion
-  - Spoken languages fluency (native/fluent/professional with interactive circular gauges)
-  - Section visibility configuration toggles
-  - Skill categories and sub-skill tags
-  - Interactive experience timeline (highlighted employer vs client chips)
-  - Project cards (case studies: problems, solutions, business impact, and cover image uploads)
-  - Education history
-  - Technology stack pills
-  - Value propositions ("Why Work With Me")
-  - Verified Certifications with status tracking (Active, In Progress, Expired)
-  - Testimonials
-  - PDF CV uploads (Language-specific versions, e.g. EN, FR)
-  - Form inquiry inbox (read/unread messages, delete)
-  - Security settings (change admin path, change password)
+> Fork this repo, fill in your `.env`, and have a fully-featured portfolio live in minutes — no code changes needed.
 
 ---
 
-## 🛠️ Technology Stack
+## ✨ Features
 
-- **Frontend**: Vue 3 (Composition API), Vite, Pinia, Vue Router, Tailwind CSS, Lucide icons, Axios
-- **Backend**: Node.js, Express, sql.js (SQLite compiled to WebAssembly), Multer, BcryptJS, CORS
-- **Database**: SQLite (persisted to `data/portfolio.db`)
+- 🌗 Responsive dark/light mode
+- 🔐 Admin panel with full CRUD for all portfolio sections
+- 📄 CV upload and management (PDF, multiple languages)
+- 🖼️ Profile image upload via Cloudinary
+- 📬 Contact form with admin inbox
+- 👁️ Section visibility toggles — show/hide any section instantly
+- 🌍 Multi-language support (spoken languages with proficiency levels)
+- 🛡️ JWT authentication, rate limiting, Helmet security headers
+- 🗄️ Turso (LibSQL) database — free tier, serverless SQLite
 
 ---
 
-## 📦 Setup & Installation
+## 🛠️ Tech Stack
 
-### 1. Install Dependencies
-Ensure you have Node.js installed, then run:
+| Layer | Technology |
+|-------|-----------|
+| Frontend | Vue 3, Vite, TypeScript, Pinia, Vue Router |
+| Styling | Tailwind CSS |
+| Backend | Express (Node.js) |
+| Database | Turso (libsql / SQLite) |
+| File Storage | Cloudinary |
+
+---
+
+## 📋 Prerequisites
+
+- **Node.js 18+**
+- A **Turso** database — free tier at [turso.tech](https://turso.tech)
+- A **Cloudinary** account — free tier at [cloudinary.com](https://cloudinary.com)
+
+---
+
+## 🚀 Quick Start
+
 ```bash
+# 1. Clone the repo
+git clone https://github.com/Medkhalilbs/Me.git my-portfolio
+cd my-portfolio
+
+# 2. Install dependencies
 npm install
+
+# 3. Set up environment variables
+cp .env.example .env
+# Open .env and fill in your Turso, Cloudinary, JWT_SECRET, etc.
+
+# 4. Start the development server
+npm run dev
 ```
 
-### 2. Running in Development
-You can run both the Vite development server and the Express API server concurrently using a single command:
-```bash
-npm run dev:all
-```
-- **Frontend** runs on: [http://localhost:5173](http://localhost:5173)
-- **API Backend** runs on: [http://localhost:3001](http://localhost:3001)
-
-Alternatively, you can run them in separate terminals:
-```bash
-npm run dev      # Start Vite frontend
-npm run server   # Start Express backend
-```
-
-On first run, the backend will automatically initialize the database schema and seed it with all original content (Volkswagen FS, Cassup, Talend migration, skills, experiences, certifications, etc.).
+5. Open **http://localhost:5173** to see the portfolio
+6. Navigate to **http://localhost:5173/{ADMIN_PATH}** (default: `/admin`) to access the admin panel
+7. The admin password is set via `ADMIN_INITIAL_PASSWORD` in your `.env`.  
+   If not set, a random password is **generated on first boot** and printed to the console — check the terminal output!
 
 ---
 
-## 🔒 Administrative Control Panel
+## ☁️ Deployment on Render
 
-The admin panel is protected by a hidden URL path and password authentication.
-
-- **Default Hidden URL**: `http://localhost:5173/admin`
-- **Default Password**: `admin2026`
-
-> [!IMPORTANT]
-> Change the password immediately upon your first login under the **Settings** panel. You can also customize the secret access URL path there.
+1. Create a new **Web Service** on [render.com](https://render.com), connect your GitHub repo
+2. **Build Command:** `npm install && npm run build`
+3. **Start Command:** `npm run start`
+4. Add all environment variables from `.env.example` in the Render dashboard
+5. ⚠️ **Do NOT set `NODE_ENV`** — Render sets it automatically. Setting it manually can break devDependency installation during build
+6. Optionally add a custom domain in Render → Settings → Custom Domains
 
 ---
 
-## 🏗️ Production Build
+## 🎨 Customization
 
-To compile and optimize the frontend application for production:
-```bash
-npm run build
-```
-This compiles TypeScript and builds the assets into the `/dist` directory.
+All portfolio content is editable via the **admin panel** — no code changes needed:
 
-To preview the built production bundle:
-```bash
-npm run preview
-```
+- **Profile**: name, title, photo, bio, contact details, social links
+- **Sections**: toggle visibility, change sort order, edit titles/subtitles/badges
+- **Experience, Projects, Education, Skills, Certifications**: full CRUD
+- **CV**: upload multiple PDFs (EN, FR, etc.), set a default
+
+The color scheme uses CSS custom properties (variables) defined in `src/assets/css/`. Edit them to match your brand.
+
+---
+
+## 📜 License
+
+MIT License — see [LICENSE](LICENSE) file for details.

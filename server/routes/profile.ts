@@ -15,7 +15,10 @@ const profileStorage = new CloudinaryStorage({
   } as any,
 })
 
-const profileUpload = multer({ storage: profileStorage })
+const profileUpload = multer({
+  storage: profileStorage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB max for images
+})
 
 const router = Router()
 
@@ -29,16 +32,6 @@ router.get('/', async (_req, res) => {
   const profile = { ...result.rows[0] } as any
   profile.about_paragraphs = JSON.parse(profile.about_paragraphs as string)
   res.json(profile)
-})
-
-// GET /api/profile/check-path/:path — public check
-router.get('/check-path/:path', async (req, res) => {
-  const { path } = req.params
-  const db = getDb()
-  const result = await db.execute(`SELECT admin_secret_path FROM profile WHERE id = 1`)
-  if (!result.rows[0]) return res.json({ valid: false })
-  const actualPath = result.rows[0].admin_secret_path as string
-  res.json({ valid: path === actualPath })
 })
 
 // GET /api/profile/admin — includes secret path + image path (admin only)

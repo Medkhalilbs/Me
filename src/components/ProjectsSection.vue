@@ -106,7 +106,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch, nextTick } from 'vue'
 import { usePortfolioStore } from '@/stores/portfolioStore'
 
 const store = usePortfolioStore()
@@ -132,6 +132,21 @@ const visibleProjects = computed(() => {
   return list.sort((a, b) => a.sort_order - b.sort_order)
 })
 
+// Fix: after every filter change, force-reveal any card already in the viewport.
+// Cards that re-enter the DOM after v-for filtering are not re-observed by the
+// global IntersectionObserver, so they stay stuck at opacity:0.
+watch(activeFilter, () => {
+  nextTick(() => {
+    const cards = document.querySelectorAll('.projects-grid .reveal')
+    cards.forEach((card) => {
+      const rect = card.getBoundingClientRect()
+      if (rect.top < window.innerHeight && rect.bottom > 0) {
+        card.classList.add('is-revealed')
+      }
+    })
+  })
+})
+
 function isExpanded(id: number) {
   return !!expandedCards.value[id]
 }
@@ -140,6 +155,7 @@ function toggleExpand(id: number) {
   expandedCards.value[id] = !expandedCards.value[id]
 }
 </script>
+
 
 <style scoped>
 .project-filters {
