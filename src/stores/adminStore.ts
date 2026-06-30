@@ -8,11 +8,11 @@ export const useAdminStore = defineStore('admin', () => {
   const loginError = ref<string | null>(null)
   const loading = ref(false)
 
-  async function login(password: string): Promise<boolean> {
+  async function login(password: string, path: string): Promise<boolean> {
     loading.value = true
     loginError.value = null
     try {
-      const res = await api.post('/auth/login', { password })
+      const res = await api.post('/auth/login', { password, path })
       token.value = res.data.token
       localStorage.setItem('admin_token', res.data.token)
       return true
