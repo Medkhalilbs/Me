@@ -1,57 +1,64 @@
 <template>
-  <div class="admin-wrapper" :class="{ 'admin-dashboard-layout': adminStore.isAuthenticated }">
-    <!-- Login Gate -->
-    <div v-if="!adminStore.isAuthenticated" class="admin-login-page">
-      <div class="login-card card">
-        <div class="login-logo gradient-text">MKBS Admin</div>
-        <p class="login-sub">Enter your password to access the control panel</p>
-        <form @submit.prevent="doLogin">
-          <div class="form-group">
-            <label class="form-label">Password</label>
-            <input
-              v-model="password"
-              type="password"
-              class="form-input"
-              placeholder="Enter admin password"
-              autofocus
-              required
-            />
-          </div>
-          <p v-if="adminStore.loginError" class="form-error">{{ adminStore.loginError }}</p>
-          <button type="submit" class="btn btn-primary" style="width:100%;margin-top:0.5rem" :disabled="adminStore.loading">
-            {{ adminStore.loading ? 'Verifying…' : 'Sign In' }}
-          </button>
-        </form>
-        <a href="/" class="back-link">← Back to portfolio</a>
-      </div>
+  <div class="admin-wrapper" :class="{ 'admin-dashboard-layout': adminStore.isAuthenticated && !checkingPath }">
+    <!-- Path Verification Loader -->
+    <div v-if="checkingPath" class="panel-loading" style="min-height: 100vh; display: flex; align-items: center; justify-content: center; width: 100%;">
+      Verifying admin route…
     </div>
 
-    <!-- Dashboard -->
     <template v-else>
-      <aside class="admin-sidebar">
-        <div class="sidebar-logo gradient-text">MKBS Admin</div>
-        <nav class="sidebar-nav">
-          <button
-            v-for="item in navItems"
-            :key="item.id"
-            class="sidebar-link"
-            :class="{ active: activePanel === item.id }"
-            @click="activePanel = item.id"
-          >
-            <span>{{ item.icon }}</span> {{ item.label }}
-          </button>
-        </nav>
-        <div class="sidebar-footer">
-          <a href="/" class="sidebar-link" style="text-decoration:none;">← View Portfolio</a>
-          <button class="sidebar-link" @click="adminStore.logout()">🚪 Logout</button>
+      <!-- Login Gate -->
+      <div v-if="!adminStore.isAuthenticated" class="admin-login-page">
+        <div class="login-card card">
+          <div class="login-logo gradient-text">MKBS Admin</div>
+          <p class="login-sub">Enter your password to access the control panel</p>
+          <form @submit.prevent="doLogin">
+            <div class="form-group">
+              <label class="form-label">Password</label>
+              <input
+                v-model="password"
+                type="password"
+                class="form-input"
+                placeholder="Enter admin password"
+                autofocus
+                required
+              />
+            </div>
+            <p v-if="adminStore.loginError" class="form-error">{{ adminStore.loginError }}</p>
+            <button type="submit" class="btn btn-primary" style="width:100%;margin-top:0.5rem" :disabled="adminStore.loading">
+              {{ adminStore.loading ? 'Verifying…' : 'Sign In' }}
+            </button>
+          </form>
+          <a href="/" class="back-link">← Back to portfolio</a>
         </div>
-      </aside>
+      </div>
 
-      <main class="admin-content">
-        <Suspense>
-          <component :is="activeComponent" />
-        </Suspense>
-      </main>
+      <!-- Dashboard -->
+      <template v-else>
+        <aside class="admin-sidebar">
+          <div class="sidebar-logo gradient-text">MKBS Admin</div>
+          <nav class="sidebar-nav">
+            <button
+              v-for="item in navItems"
+              :key="item.id"
+              class="sidebar-link"
+              :class="{ active: activePanel === item.id }"
+              @click="activePanel = item.id"
+            >
+              <span>{{ item.icon }}</span> {{ item.label }}
+            </button>
+          </nav>
+          <div class="sidebar-footer">
+            <a href="/" class="sidebar-link" style="text-decoration:none;">← View Portfolio</a>
+            <button class="sidebar-link" @click="adminStore.logout()">🚪 Logout</button>
+          </div>
+        </aside>
+
+        <main class="admin-content">
+          <Suspense>
+            <component :is="activeComponent" />
+          </Suspense>
+        </main>
+      </template>
     </template>
 
     <ToastContainer />
@@ -59,8 +66,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { useAdminStore } from '@/stores/adminStore'
+import api from '@/api'
 
 // Lazy-loaded admin panels
 import AdminProfile       from '@/components/admin/AdminProfile.vue'
@@ -79,12 +88,34 @@ import AdminSections      from '@/components/admin/AdminSections.vue'
 import AdminSettings      from '@/components/admin/AdminSettings.vue'
 import ToastContainer     from '@/components/ToastContainer.vue'
 
+const route = useRoute()
+const router = useRouter()
 const adminStore = useAdminStore()
 const password = ref('')
 const activePanel = ref('profile')
+const checkingPath = ref(true)
+
+const adminPath = computed(() => (route.params.adminPath as string) || '')
+
+async function verifyPath() {
+  try {
+    const res = await api.post('/auth/verify-path', { path: adminPath.value })
+    if (!res.data.valid) {
+      router.replace('/')
+    } else {
+      checkingPath.value = false
+    }
+  } catch {
+    router.replace('/')
+  }
+}
+
+onMounted(() => {
+  verifyPath()
+})
 
 async function doLogin() {
-  await adminStore.login(password.value)
+  await adminStore.login(password.value, adminPath.value)
   password.value = ''
 }
 

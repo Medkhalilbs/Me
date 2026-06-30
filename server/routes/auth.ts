@@ -23,19 +23,38 @@ const loginLimiter = rateLimit({
 
 // POST /api/auth/login
 router.post('/login', loginLimiter, async (req, res) => {
-  const { password } = req.body
+  const { password, path } = req.body
   if (!password) return res.status(400).json({ error: 'Password required' })
+  if (!path) return res.status(400).json({ error: 'Path required' })
 
   const db = getDb()
-  const result = await db.execute(`SELECT admin_password_hash FROM profile WHERE id = 1`)
+  const result = await db.execute(`SELECT admin_password_hash, admin_secret_path FROM profile WHERE id = 1`)
   if (!result.rows[0]) return res.status(500).json({ error: 'Profile not found' })
+
+  const dbSecretPath = result.rows[0].admin_secret_path as string
+  if (path !== dbSecretPath) {
+    return res.status(401).json({ error: 'Invalid path or password' })
+  }
 
   const hash = result.rows[0].admin_password_hash as string
   const valid = bcrypt.compareSync(password, hash)
-  if (!valid) return res.status(401).json({ error: 'Invalid password' })
+  if (!valid) return res.status(401).json({ error: 'Invalid path or password' })
 
   const token = signToken()
   res.json({ token })
+})
+
+// POST /api/auth/verify-path — verify if path is the correct secret path
+router.post('/verify-path', async (req, res) => {
+  const { path } = req.body
+  if (!path) return res.json({ valid: false })
+
+  const db = getDb()
+  const result = await db.execute(`SELECT admin_secret_path FROM profile WHERE id = 1`)
+  if (!result.rows[0]) return res.json({ valid: false })
+
+  const dbSecretPath = result.rows[0].admin_secret_path as string
+  res.json({ valid: path === dbSecretPath })
 })
 
 // POST /api/auth/logout — JWT is stateless, nothing to revoke server-side
