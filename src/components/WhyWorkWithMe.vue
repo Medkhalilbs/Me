@@ -36,7 +36,7 @@ import { usePortfolioStore } from '@/stores/portfolioStore'
 
 const store = usePortfolioStore()
 const whyCards = computed(() => store.whyCards)
-const meta = computed(() => store.getSectionMeta('why-me'))
+const meta = computed(() => store.getSectionMeta('why-work-with-me'))
 </script>
 
 <style scoped>
