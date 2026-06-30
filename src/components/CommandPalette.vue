@@ -47,31 +47,34 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, nextTick } from 'vue'
+import { usePortfolioStore } from '@/stores/portfolioStore'
 
 const props = defineProps<{ open: boolean }>()
 const emit = defineEmits(['close'])
 
+const store = usePortfolioStore()
 const query = ref('')
 const selectedIndex = ref(0)
 const inputRef = ref<HTMLInputElement | null>(null)
 
 const commands = [
-  { icon: '🏠', label: 'Hero / Home',    description: 'Go to the top boot sequence',        href: '#hero' },
-  { icon: '👤', label: 'About',          description: 'Learn more about my background',      href: '#about' },
-  { icon: '⚡', label: 'Skills',         description: 'Technical skills & architecture',     href: '#skills' },
-  { icon: '💼', label: 'Experience',     description: 'Work history & professional timeline',href: '#experience' },
-  { icon: '🚀', label: 'Projects',       description: 'Featured projects & case studies',    href: '#projects' },
-  { icon: '🎓', label: 'Education',      description: 'Academic background & degrees',       href: '#education' },
-  { icon: '🛠',  label: 'Tech Stack',    description: 'All technologies & tools used',       href: '#tech-stack' },
-  { icon: '🏆', label: 'Certifications', description: 'AWS certificates & credentials',       href: '#certifications' },
-  { icon: '✨', label: 'Why Work With Me', description: 'Enterprise consulting value props',  href: '#why-me' },
-  { icon: '📬', label: 'Contact',        description: 'Get in touch / send message',         href: '#contact' },
+  { key: 'hero', icon: '🏠', label: 'Hero / Home',    description: 'Go to the top boot sequence',        href: '#hero' },
+  { key: 'about', icon: '👤', label: 'About',          description: 'Learn more about my background',      href: '#about' },
+  { key: 'skills', icon: '⚡', label: 'Skills',         description: 'Technical skills & architecture',     href: '#skills' },
+  { key: 'experience', icon: '💼', label: 'Experience',     description: 'Work history & professional timeline',href: '#experience' },
+  { key: 'projects', icon: '🚀', label: 'Projects',       description: 'Featured projects & case studies',    href: '#projects' },
+  { key: 'education', icon: '🎓', label: 'Education',      description: 'Academic background & degrees',       href: '#education' },
+  { key: 'tech-stack', icon: '🛠',  label: 'Tech Stack',    description: 'All technologies & tools used',       href: '#tech-stack' },
+  { key: 'certifications', icon: '🏆', label: 'Certifications', description: 'AWS certificates & credentials',       href: '#certifications' },
+  { key: 'why-work-with-me', icon: '✨', label: 'Why Work With Me', description: 'Enterprise consulting value props',  href: '#why-me' },
+  { key: 'contact', icon: '📬', label: 'Contact',        description: 'Get in touch / send message',         href: '#contact' },
 ]
 
 const filtered = computed(() => {
   const q = query.value.toLowerCase()
-  if (!q) return commands
-  return commands.filter(c =>
+  const visibleCommands = commands.filter(c => store.isSectionVisible(c.key))
+  if (!q) return visibleCommands
+  return visibleCommands.filter(c =>
     c.label.toLowerCase().includes(q) || c.description.toLowerCase().includes(q)
   )
 })
