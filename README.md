@@ -14,6 +14,8 @@ A customizable portfolio/CV website built with Vue 3, Express, Turso, and Cloudi
 - 🖼️ Profile image upload via Cloudinary
 - 📬 Contact form with admin inbox
 - 👁️ Section visibility toggles — show/hide any section instantly
+- 🔍 Command Palette (⌘K) to search and jump to sections (automatically filters out hidden sections)
+- ⚙️ Secure Dynamic Admin Path configuration (invalidates and redirects old paths immediately)
 - 🌍 Multi-language support (spoken languages with proficiency levels)
 - 🛡️ JWT authentication, rate limiting, Helmet security headers
 - 🗄️ Turso (LibSQL) database — free tier, serverless SQLite
