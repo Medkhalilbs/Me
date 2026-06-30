@@ -16,7 +16,10 @@ const cvStorage = new CloudinaryStorage({
   } as any,
 })
 
-const upload = multer({ storage: cvStorage })
+const upload = multer({
+  storage: cvStorage,
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB max for PDFs
+})
 
 const router = Router()
 

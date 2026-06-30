@@ -1,52 +1,68 @@
 import { Router } from 'express'
 import bcrypt from 'bcryptjs'
+import jwt from 'jsonwebtoken'
+import rateLimit from 'express-rate-limit'
 import { getDb } from '../db.js'
 
 const router = Router()
 
-// Simple in-memory token store (local use only)
-const validTokens = new Set<string>()
+// ─── JWT setup ───────────────────────────────────────────────────────────────
+const JWT_SECRET =
+  process.env.JWT_SECRET || 'dev-only-fallback-secret-change-in-production'
 
-function generateToken(): string {
-  return Math.random().toString(36).slice(2) + Date.now().toString(36)
+function signToken(): string {
+  return jwt.sign({ admin: true }, JWT_SECRET, { expiresIn: '24h' })
 }
 
+// ─── Rate limiter (login only) ────────────────────────────────────────────────
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5,
+  message: { error: 'Too many login attempts. Try again in 15 minutes.' },
+})
+
 // POST /api/auth/login
-router.post('/login', async (req, res) => {
+router.post('/login', loginLimiter, async (req, res) => {
   const { password } = req.body
   if (!password) return res.status(400).json({ error: 'Password required' })
 
   const db = getDb()
-  const result = await db.execute(`SELECT admin_password_hash, admin_secret_path FROM profile WHERE id = 1`)
+  const result = await db.execute(`SELECT admin_password_hash FROM profile WHERE id = 1`)
   if (!result.rows[0]) return res.status(500).json({ error: 'Profile not found' })
 
   const hash = result.rows[0].admin_password_hash as string
   const valid = bcrypt.compareSync(password, hash)
   if (!valid) return res.status(401).json({ error: 'Invalid password' })
 
-  const token = generateToken()
-  validTokens.add(token)
+  const token = signToken()
   res.json({ token })
 })
 
-// POST /api/auth/logout
-router.post('/logout', (req, res) => {
-  const auth = req.headers.authorization
-  if (auth?.startsWith('Bearer ')) {
-    validTokens.delete(auth.slice(7))
-  }
+// POST /api/auth/logout — JWT is stateless, nothing to revoke server-side
+router.post('/logout', (_req, res) => {
   res.json({ ok: true })
 })
 
 // POST /api/auth/change-password
 router.post('/change-password', async (req, res) => {
   const auth = req.headers.authorization
-  if (!auth?.startsWith('Bearer ') || !validTokens.has(auth.slice(7))) {
+  if (!auth?.startsWith('Bearer ')) {
     return res.status(401).json({ error: 'Unauthorized' })
+  }
+  const token = auth.slice(7)
+  try {
+    jwt.verify(token, JWT_SECRET)
+  } catch {
+    return res.status(401).json({ error: 'Token expired or invalid' })
   }
 
   const { currentPassword, newPassword } = req.body
-  if (!currentPassword || !newPassword) return res.status(400).json({ error: 'Both passwords required' })
+  if (!currentPassword || !newPassword) {
+    return res.status(400).json({ error: 'Both passwords required' })
+  }
+  if (newPassword.length < 8) {
+    return res.status(400).json({ error: 'New password must be at least 8 characters' })
+  }
 
   const db = getDb()
   const result = await db.execute(`SELECT admin_password_hash FROM profile WHERE id = 1`)
@@ -61,13 +77,19 @@ router.post('/change-password', async (req, res) => {
   res.json({ ok: true })
 })
 
-// Middleware to verify admin token (exported for use in other routes)
+// ─── Middleware: verify JWT Bearer token (used by all admin routes) ────────────
 export function requireAuth(req: any, res: any, next: any) {
   const auth = req.headers.authorization
-  if (!auth?.startsWith('Bearer ') || !validTokens.has(auth.slice(7))) {
+  if (!auth?.startsWith('Bearer ')) {
     return res.status(401).json({ error: 'Unauthorized' })
   }
-  next()
+  const token = auth.slice(7)
+  try {
+    jwt.verify(token, JWT_SECRET)
+    next()
+  } catch {
+    return res.status(401).json({ error: 'Token expired or invalid' })
+  }
 }
 
 export default router
