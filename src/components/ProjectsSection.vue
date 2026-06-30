@@ -6,18 +6,7 @@
       <h2 class="section-title reveal">{{ meta.title || 'Featured Work' }}</h2>
       <p class="section-subtitle reveal">{{ meta.subtitle || 'Deployments, security tooling, and automation pipelines built to scale' }}</p>
 
-      <!-- Terminal Tab Filters -->
-      <div class="project-filters reveal">
-        <button
-          v-for="f in filters"
-          :key="f.value"
-          class="filter-tab"
-          :class="{ active: activeFilter === f.value }"
-          @click="activeFilter = f.value"
-        >
-          <span class="tab-prefix">></span> {{ f.label }}
-        </button>
-      </div>
+
 
       <!-- Projects Grid -->
       <div class="projects-grid">
@@ -106,46 +95,17 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, nextTick } from 'vue'
+import { ref, computed } from 'vue'
 import { usePortfolioStore } from '@/stores/portfolioStore'
 
 const store = usePortfolioStore()
 const meta = computed(() => store.getSectionMeta('projects'))
 
-const activeFilter = ref('all')
 const expandedCards = ref<Record<number, boolean>>({})
 
-// Dynamic filters built from actual project categories in DB
-const filters = computed(() => {
-  const cats = [...new Set(store.projects.map(p => p.category).filter(Boolean))]
-  return [
-    { label: 'All', value: 'all' },
-    ...cats.map(c => ({ label: c.charAt(0).toUpperCase() + c.slice(1), value: c }))
-  ]
-})
-
-const visibleProjects = computed(() => {
-  let list = store.projects
-  if (activeFilter.value !== 'all') {
-    list = list.filter(p => p.category === activeFilter.value)
-  }
-  return list.sort((a, b) => a.sort_order - b.sort_order)
-})
-
-// Fix: after every filter change, force-reveal any card already in the viewport.
-// Cards that re-enter the DOM after v-for filtering are not re-observed by the
-// global IntersectionObserver, so they stay stuck at opacity:0.
-watch(activeFilter, () => {
-  nextTick(() => {
-    const cards = document.querySelectorAll('.projects-grid .reveal')
-    cards.forEach((card) => {
-      const rect = card.getBoundingClientRect()
-      if (rect.top < window.innerHeight && rect.bottom > 0) {
-        card.classList.add('is-revealed')
-      }
-    })
-  })
-})
+const visibleProjects = computed(() =>
+  [...store.projects].sort((a, b) => a.sort_order - b.sort_order)
+)
 
 function isExpanded(id: number) {
   return !!expandedCards.value[id]
@@ -158,53 +118,6 @@ function toggleExpand(id: number) {
 
 
 <style scoped>
-.project-filters {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-  margin-bottom: 3rem;
-  justify-content: center;
-  border-bottom: 1px solid var(--border);
-  padding-bottom: 1.5rem;
-}
-
-.filter-tab {
-  padding: 0.5rem 1.25rem;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  color: var(--text-secondary);
-  font-family: var(--font-mono);
-  font-size: 0.85rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all var(--transition);
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  border-radius: 4px;
-}
-
-.tab-prefix {
-  color: var(--text-muted);
-  transition: color var(--transition);
-}
-
-.filter-tab.active {
-  border-color: var(--accent-navy);
-  color: var(--accent-navy);
-  border-bottom: 2px solid var(--accent-navy);
-}
-
-.filter-tab:hover {
-  border-color: rgba(74, 125, 191, 0.4);
-  color: var(--text-primary);
-}
-
-.filter-tab.active .tab-prefix,
-.filter-tab:hover .tab-prefix {
-  color: var(--accent-navy);
-}
-
 /* Projects Grid */
 .projects-grid {
   display: grid;

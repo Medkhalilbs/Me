@@ -4,6 +4,8 @@ import { CloudinaryStorage } from 'multer-storage-cloudinary'
 import cloudinary from '../cloudinary.js'
 import { getDb } from '../db.js'
 import { requireAuth } from './auth.js'
+import https from 'https'
+import http from 'http'
 
 import util from 'util'
 
@@ -37,7 +39,7 @@ router.get('/', async (_req, res) => {
   }
 })
 
-// GET /api/cvs/download/:id — public, redirect to Cloudinary URL
+// GET /api/cvs/download/:id — public, proxy download with proper filename
 router.get('/download/:id', async (req, res) => {
   try {
     const db = getDb()
@@ -45,9 +47,27 @@ router.get('/download/:id', async (req, res) => {
     if (!result.rows[0]) return res.status(404).json({ error: 'CV not found' })
 
     const cv = result.rows[0] as any
-    // file_path now stores the full Cloudinary URL
     if (!cv.file_path) return res.status(404).json({ error: 'File not found' })
-    res.redirect(cv.file_path)
+
+    // Derive a safe filename: use stored filename, ensure it ends with .pdf
+    let filename = (cv.filename as string) || `CV_${cv.language || 'download'}.pdf`
+    if (!filename.toLowerCase().endsWith('.pdf')) filename += '.pdf'
+
+    // Proxy the file so the browser receives proper headers and saves it as .pdf
+    const fileUrl = cv.file_path as string
+    const protocol = fileUrl.startsWith('https') ? https : http
+
+    protocol.get(fileUrl, (fileRes) => {
+      res.setHeader('Content-Type', 'application/pdf')
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`)
+      if (fileRes.headers['content-length']) {
+        res.setHeader('Content-Length', fileRes.headers['content-length'])
+      }
+      fileRes.pipe(res)
+    }).on('error', (err) => {
+      console.error('Error fetching CV from Cloudinary:', err)
+      res.status(502).json({ error: 'Failed to fetch file from storage' })
+    })
   } catch (err: any) {
     console.error('Error downloading CV:', err)
     res.status(500).json({
